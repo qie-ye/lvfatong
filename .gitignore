@@ -1,24 +1,88 @@
-# Compiled class file
-*.class
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# Log file
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Node.js / Vue / Vite 前端 ###
+node_modules/
+dist/
+*.local
+.env.local
+.env.*.local
+
+### 环境配置（含敏感信息） ###
+.env
+.env.*
+
+### 日志 ###
 *.log
+logs/
 
-# BlueJ files
-*.ctxt
+### 操作系统 ###
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+### Docker 数据卷 ###
+mysql_data/
+postgres_data/
+redis_data/
 
-# Package Files #
+### Spring Boot 构建产物 ###
+BOOT-INF/
+
+### 编译产物 ###
+*.class
 *.jar
 *.war
-*.nar
 *.ear
+*.nar
 *.zip
 *.tar.gz
 *.rar
+*.pyc
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+### Java 异常日志 ###
 hs_err_pid*
 replay_pid*
+
+### BlueJ ###
+*.ctxt
+
+### J2ME ###
+.mtj.tmp/
+
+### 临时文件 ###
+*.swp
+*.swo
+*~
+~$*

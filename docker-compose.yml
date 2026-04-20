@@ -1,0 +1,54 @@
+version: '3.8'
+
+# 本地开发无需Docker，直接安装MySQL+Redis即可
+# Milvus使用嵌入式Milvus Lite（Java依赖），无需独立部署
+# 此文件仅用于后续生产部署或团队协作
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: lvatong-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lvatong_dev
+      MYSQL_USER: lvatong
+      MYSQL_PASSWORD: lvatong123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: lvatong-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Milvus Standalone（生产部署用，开发环境用Milvus Lite）
+  # etcd:
+  #   image: quay.io/coreos/etcd:v3.5.5
+  #   ...
+  # minio:
+  #   image: minio/minio:latest
+  #   ...
+  # milvus:
+  #   image: milvusdb/milvus:v2.4.1
+  #   ...
+
+volumes:
+  mysql_data:
+  redis_data:

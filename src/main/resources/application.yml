@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: lvatong
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+zhipu:
+  base-url: https://open.bigmodel.cn/api/paas/v4
+  api-key: ${ZHIPU_API_KEY:}
+
+jwt:
+  secret: ${JWT_SECRET:lvatong-default-secret-key-change-in-production}
+  expiration: 86400000
+
+milvus:
+  host: ${MILVUS_HOST:localhost}
+  port: ${MILVUS_PORT:19530}
+  db-name: default
+  collection-name: legal_vectors
+  embedding-dim: 1024
+  index-type: HNSW
+  metric-type: COSINE
+  index-params: '{"M":16,"efConstruction":256}'
+  search-params: '{"ef":128}'
