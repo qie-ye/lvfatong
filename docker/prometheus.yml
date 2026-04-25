@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'lvatong-app'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['lvatong-app:8080']
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']

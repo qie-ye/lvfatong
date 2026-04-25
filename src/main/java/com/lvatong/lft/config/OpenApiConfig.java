@@ -15,7 +15,7 @@ public class OpenApiConfig {
             .info(new Info()
                 .title("律法通API")
                 .description("律法通APP - 智能法律咨询平台API文档")
-                .version("v0.1")
+                .version("v0.2")
                 .contact(new Contact()
                     .name("律法通团队")));
     }

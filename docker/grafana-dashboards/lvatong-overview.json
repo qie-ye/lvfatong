@@ -1,0 +1,48 @@
+{
+  "dashboard": {
+    "title": "律法通 - 系统概览",
+    "tags": ["lvatong"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "HTTP 请求 QPS",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [{"expr": "rate(http_server_requests_seconds_count{application=\"lvatong\"}[5m])", "legendFormat": "{{method}} {{uri}}"}]
+      },
+      {
+        "title": "HTTP 请求 P95 延迟",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [{"expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"lvatong\"}[5m]))", "legendFormat": "P95"}]
+      },
+      {
+        "title": "JVM 内存使用",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {"expr": "jvm_memory_used_bytes{application=\"lvatong\", area=\"heap\"}", "legendFormat": "Heap Used"},
+          {"expr": "jvm_memory_max_bytes{application=\"lvatong\", area=\"heap\"}", "legendFormat": "Heap Max"}
+        ]
+      },
+      {
+        "title": "API 错误率",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [{"expr": "rate(http_server_requests_seconds_count{application=\"lvatong\", status=~\"5..\"}[5m]) / rate(http_server_requests_seconds_count{application=\"lvatong\"}[5m])", "legendFormat": "Error Rate"}]
+      },
+      {
+        "title": "数据库连接池",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [{"expr": "hikaricp_connections_active{application=\"lvatong\"}", "legendFormat": "Active"}]
+      },
+      {
+        "title": "Redis 缓存命中率",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [{"expr": "cache_gets_hit_total{application=\"lvatong\"} / (cache_gets_hit_total{application=\"lvatong\"} + cache_gets_miss_total{application=\"lvatong\"})", "legendFormat": "Hit Rate"}]
+      }
+    ]
+  }
+}

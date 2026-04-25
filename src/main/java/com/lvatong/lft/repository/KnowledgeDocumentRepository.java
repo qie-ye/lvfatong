@@ -7,4 +7,5 @@ import java.util.List;
 public interface KnowledgeDocumentRepository extends JpaRepository<KnowledgeDocument, Long> {
     List<KnowledgeDocument> findByVectorIndexedFalse();
     List<KnowledgeDocument> findByDocType(KnowledgeDocument.DocType docType);
+    boolean existsByTitle(String title);
 }

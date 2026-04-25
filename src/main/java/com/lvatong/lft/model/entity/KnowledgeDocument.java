@@ -13,15 +13,21 @@ public class KnowledgeDocument extends BaseEntity {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(length = 50)
+    @Column(length = 200)
     private String source;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private DocType docType;
 
+    @Column(name = "law_domain", length = 50)
+    private String lawDomain;
+
     @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "source_url", length = 500)
+    private String sourceUrl;
 
     @Column(name = "vector_indexed", nullable = false)
     private Boolean vectorIndexed = false;

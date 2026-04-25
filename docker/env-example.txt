@@ -1,0 +1,37 @@
+# ============================================================
+# 律法通 生产环境变量配置
+# 复制此文件为 .env 后修改: cp docker/env-example.txt .env
+# ============================================================
+
+# MySQL
+MYSQL_ROOT_PASSWORD=your_root_password
+MYSQL_PASSWORD=your_app_password
+
+# Redis
+REDIS_PASSWORD=
+
+# JWT (至少32字符)
+JWT_SECRET=your-production-jwt-secret-at-least-32-characters
+
+# 智谱API
+ZHIPU_API_KEY=your_zhipu_api_key_here
+
+# Milvus向量数据库
+MILVUS_ENABLED=true
+MILVUS_HOST=milvus
+MILVUS_PORT=19530
+MILVUS_DB=default
+MILVUS_COLLECTION=legal_vectors
+MILVUS_TOKEN=
+
+# MinIO对象存储（Milvus依赖）
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+
+# CORS
+CORS_ORIGINS=http://your-domain.com
+
+# 端口
+HTTP_PORT=80
+MYSQL_PORT=3306
+REDIS_PORT=6379

@@ -20,7 +20,14 @@ public class ChatSession extends BaseEntity {
     @Column(length = 20)
     private SessionType type;
 
+    @Column(length = 20, nullable = false)
+    private String status = "ACTIVE";
+
     public enum SessionType {
         LEGAL_QA, CONTRACT_ANALYSIS
+    }
+
+    public enum SessionStatus {
+        ACTIVE, ENDED
     }
 }
