@@ -2,9 +2,9 @@
 
 # ⚖ 律法通 LvFaTong
 
-**AI 驱动的智能法律咨询平台**
+**AI 赋能的律师效率工具**
 
-面向法律咨询场景提供 AI 问答、知识检索、合同风险分析、案例检索、律师服务与会话记忆能力
+面向律师日常办案场景，提供 AI 问答、法条检索、合同风险分析、案例检索与法律文书辅助能力。已本地部署并在小规模灰度测试中（约 10 位律师持续测试反馈）。
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://adoptium.net/)
@@ -12,16 +12,18 @@
 [![Vue](https://img.shields.io/badge/Vue-3.4-4FC08D.svg)](https://vuejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![CI](https://img.shields.io/github/actions/workflow/status/qie-ye/lvfatong/ci.yml?branch=main&label=CI)](https://github.com/qie-ye/lvfatong/actions)
+[![Status](https://img.shields.io/badge/Status-Gray%20Testing-yellow.svg)](https://github.com/qie-ye/lvfatong)
 
 </div>
 
 ---
 
-项目以"**法律专业性 + 工程可落地**"为目标：
+面向律师日常办案场景，项目以"**法律专业性 + 工程可落地**"为目标：
 
 - 在 AI 层实现了 `RAG + Function Calling + 多轮记忆` 的完整闭环
-- 在业务层覆盖了法律咨询的高频场景（问答、法条、FAQ、合同、案例、律师）
+- 在业务层覆盖了律师高频场景（问答、合同、法条、案例、文书）
 - 在工程层具备了 `安全鉴权 + 可观测性 + 容器化部署 + CI` 的生产化能力
+- 🟢 **灰度测试中**：已本地部署，约 10 位律师持续使用并反馈
 
 ## ✨ 项目亮点
 
