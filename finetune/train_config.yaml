@@ -1,0 +1,44 @@
+### model
+model_name_or_path: ${MODEL_PATH:-/path/to/Qwen2-7B-Instruct}
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+
+### lora
+lora_target: all
+lora_rank: 8
+lora_alpha: 16
+lora_dropout: 0.1
+
+### dataset
+dataset: lawgpt_legal_qa
+template: alpaca
+cutoff_len: 512
+max_samples: 6000
+overwrite_cache: true
+
+### training args
+output_dir: outputs/lawgpt-lora
+logging_steps: 10
+save_steps: 500
+save_total_limit: 3
+plot_loss: true
+
+learning_rate: 1.0e-4
+num_train_epochs: 2.0
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 16
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+optim: paged_adamw_8bit
+
+bf16: false
+fp16: true
+
+dataloader_num_workers: 0
+val_size: 0.05
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 500

@@ -36,7 +36,7 @@ public class DataInitializer implements ApplicationRunner {
             admin.setNickname("管理员");
             admin.setRole(User.UserRole.ADMIN);
             userRepository.save(admin);
-            log.info("默认管理员账户已创建: admin / admin123");
+            log.info("默认管理员账户已创建: admin");
         } else {
             log.debug("管理员账户已存在，跳过初始化");
         }
@@ -120,7 +120,7 @@ public class DataInitializer implements ApplicationRunner {
             profile.setConsultationType(seed.consultType);
             lawyerProfileRepository.save(profile);
         }
-        log.info("律师种子数据已创建：{} 位律师，默认密码 lawyer123", seeds.size());
+        log.info("律师种子数据已创建：{} 位律师", seeds.size());
     }
 
     private record LawyerSeed(String username, String realName, String lawFirm, String licenseNo,

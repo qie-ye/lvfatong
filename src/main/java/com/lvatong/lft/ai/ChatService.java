@@ -25,19 +25,20 @@ public class ChatService {
      */
     public String legalQa(String question, String context) {
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.LEGAL_QA);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.LEGAL_QA);
         String systemPrompt = promptTemplateService.buildLegalQaSystemPrompt(context);
         List<Map<String, String>> messages = List.of(
                 Map.of("role", "system", "content", systemPrompt),
                 Map.of("role", "user", "content", question)
         );
         try {
-            String answer = zhipuApiClient.chat(model, messages, 0.7, 4096);
+            String answer = zhipuApiClient.chat(model, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer);
         } catch (Exception e) {
             log.warn("Primary model {} failed, falling back: {}", model, e.getMessage());
             modelRouterService.markModelFailure(model);
             String fallback = modelRouterService.getFallbackModel(model);
-            String answer = zhipuApiClient.chat(fallback, messages, 0.7, 4096);
+            String answer = zhipuApiClient.chat(fallback, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer + "\n\n[注：当前使用降级模型，回答质量可能降低]");
         }
     }
@@ -55,19 +56,20 @@ public class ChatService {
     public String legalQa(String question, String context, List<Map<String, String>> history, String memoryContext) {
         PromptTemplateService.IntentType intent = intentClassifier.classify(question);
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.LEGAL_QA);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.LEGAL_QA);
         String systemPrompt = promptTemplateService.buildSystemPromptByIntent(intent, context, memoryContext);
         java.util.ArrayList<Map<String, String>> messages = new java.util.ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         messages.addAll(history);
         messages.add(Map.of("role", "user", "content", question));
         try {
-            String answer = zhipuApiClient.chat(model, messages, 0.7, 4096);
+            String answer = zhipuApiClient.chat(model, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer);
         } catch (Exception e) {
             log.warn("Primary model {} failed, falling back: {}", model, e.getMessage());
             modelRouterService.markModelFailure(model);
             String fallback = modelRouterService.getFallbackModel(model);
-            String answer = zhipuApiClient.chat(fallback, messages, 0.7, 4096);
+            String answer = zhipuApiClient.chat(fallback, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer + "\n\n[注：当前使用降级模型，回答质量可能降低]");
         }
     }
@@ -85,13 +87,14 @@ public class ChatService {
     public void legalQaStream(String question, String context, List<Map<String, String>> history, String memoryContext, ZhipuApiClient.SseEventHandler handler) {
         PromptTemplateService.IntentType intent = intentClassifier.classify(question);
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.LEGAL_QA);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.LEGAL_QA);
         String systemPrompt = promptTemplateService.buildSystemPromptByIntent(intent, context, memoryContext);
         java.util.ArrayList<Map<String, String>> messages = new java.util.ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         if (history != null) messages.addAll(history);
         messages.add(Map.of("role", "user", "content", question));
         try {
-            zhipuApiClient.chatStream(model, messages, 0.7, 4096, new ZhipuApiClient.SseEventHandler() {
+            zhipuApiClient.chatStream(model, messages, params.temperature(), params.maxTokens(), new ZhipuApiClient.SseEventHandler() {
                 @Override
                 public void onContent(String content) {
                     handler.onContent(content);
@@ -106,7 +109,7 @@ public class ChatService {
             log.warn("Stream model {} failed, falling back: {}", model, e.getMessage());
             modelRouterService.markModelFailure(model);
             String fallback = modelRouterService.getFallbackModel(model);
-            zhipuApiClient.chatStream(fallback, messages, 0.7, 4096, new ZhipuApiClient.SseEventHandler() {
+            zhipuApiClient.chatStream(fallback, messages, params.temperature(), params.maxTokens(), new ZhipuApiClient.SseEventHandler() {
                 @Override
                 public void onContent(String content) {
                     handler.onContent(content);
@@ -149,19 +152,20 @@ public class ChatService {
     private String legalQaRaw(String question, String context, List<Map<String, String>> history,
                                PromptTemplateService.IntentType intent, String memoryContext) {
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.LEGAL_QA);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.LEGAL_QA);
         String systemPrompt = promptTemplateService.buildSystemPromptByIntent(intent, context, memoryContext);
         java.util.ArrayList<Map<String, String>> messages = new java.util.ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         if (history != null) messages.addAll(history);
         messages.add(Map.of("role", "user", "content", question));
         try {
-            String answer = zhipuApiClient.chat(model, messages, 0.7, 4096);
+            String answer = zhipuApiClient.chat(model, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer);
         } catch (Exception e) {
             log.warn("Primary model {} failed, falling back: {}", model, e.getMessage());
             modelRouterService.markModelFailure(model);
             String fallback = modelRouterService.getFallbackModel(model);
-            String answer = zhipuApiClient.chat(fallback, messages, 0.7, 4096);
+            String answer = zhipuApiClient.chat(fallback, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer + "\n\n[注：当前使用降级模型，回答质量可能降低]");
         }
     }
@@ -188,6 +192,7 @@ public class ChatService {
 
     private String complexLegalQaRaw(String question, String context, List<Map<String, String>> history, String memoryContext) {
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.DEEP_REASONING);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.DEEP_REASONING);
         String systemPrompt = promptTemplateService.buildSystemPromptByIntent(
                 PromptTemplateService.IntentType.COMPLEX_LEGAL, context, memoryContext);
         java.util.ArrayList<Map<String, String>> messages = new java.util.ArrayList<>();
@@ -195,7 +200,7 @@ public class ChatService {
         if (history != null) messages.addAll(history);
         messages.add(Map.of("role", "user", "content", question));
         try {
-            String answer = zhipuApiClient.chat(model, messages, 0.7, 8192);
+            String answer = zhipuApiClient.chat(model, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer);
         } catch (Exception e) {
             log.warn("Complex model {} failed, falling back to legalQa: {}", model, e.getMessage());
@@ -226,6 +231,7 @@ public class ChatService {
                                    List<Map<String, String>> history, String memoryContext) {
         try {
             String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.LEGAL_QA);
+            ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.LEGAL_QA);
             String systemPrompt = promptTemplateService.buildSystemPromptByIntent(
                     PromptTemplateService.IntentType.COMPLEX_LEGAL, context, memoryContext);
 
@@ -241,7 +247,7 @@ public class ChatService {
             int maxIterations = 5;
             for (int i = 0; i < maxIterations; i++) {
                 ZhipuApiClient.ChatWithToolsResult result =
-                        zhipuApiClient.chatWithTools(model, messages, tools, 0.7, 4096);
+                        zhipuApiClient.chatWithTools(model, messages, tools, params.temperature(), params.maxTokens());
 
                 if (!result.hasToolCalls()) {
                     log.info("Function calling completed in {} round(s)", i + 1);
@@ -283,6 +289,7 @@ public class ChatService {
     public void complexLegalQaStream(String question, String context, List<Map<String, String>> history,
                                      String memoryContext, ZhipuApiClient.SseEventHandler handler) {
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.DEEP_REASONING);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.DEEP_REASONING);
         String systemPrompt = promptTemplateService.buildSystemPromptByIntent(
                 PromptTemplateService.IntentType.COMPLEX_LEGAL, context, memoryContext);
         java.util.ArrayList<Map<String, String>> messages = new java.util.ArrayList<>();
@@ -290,7 +297,7 @@ public class ChatService {
         if (history != null) messages.addAll(history);
         messages.add(Map.of("role", "user", "content", question));
         try {
-            zhipuApiClient.chatStream(model, messages, 0.7, 8192, new ZhipuApiClient.SseEventHandler() {
+            zhipuApiClient.chatStream(model, messages, params.temperature(), params.maxTokens(), new ZhipuApiClient.SseEventHandler() {
                 @Override
                 public void onContent(String content) {
                     handler.onContent(content);
@@ -318,13 +325,14 @@ public class ChatService {
     public void legalQaStream(String question, String context, List<Map<String, String>> history,
                                PromptTemplateService.IntentType intent, String memoryContext, ZhipuApiClient.SseEventHandler handler) {
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.LEGAL_QA);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.LEGAL_QA);
         String systemPrompt = promptTemplateService.buildSystemPromptByIntent(intent, context, memoryContext);
         java.util.ArrayList<Map<String, String>> messages = new java.util.ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         if (history != null) messages.addAll(history);
         messages.add(Map.of("role", "user", "content", question));
         try {
-            zhipuApiClient.chatStream(model, messages, 0.7, 4096, new ZhipuApiClient.SseEventHandler() {
+            zhipuApiClient.chatStream(model, messages, params.temperature(), params.maxTokens(), new ZhipuApiClient.SseEventHandler() {
                 @Override
                 public void onContent(String content) {
                     handler.onContent(content);
@@ -339,7 +347,7 @@ public class ChatService {
             log.warn("Stream model {} failed, falling back: {}", model, e.getMessage());
             modelRouterService.markModelFailure(model);
             String fallback = modelRouterService.getFallbackModel(model);
-            zhipuApiClient.chatStream(fallback, messages, 0.7, 4096, new ZhipuApiClient.SseEventHandler() {
+            zhipuApiClient.chatStream(fallback, messages, params.temperature(), params.maxTokens(), new ZhipuApiClient.SseEventHandler() {
                 @Override
                 public void onContent(String content) {
                     handler.onContent(content);
@@ -369,19 +377,20 @@ public class ChatService {
      */
     public String contractAnalysis(String contractText, String context) {
         String model = modelRouterService.getModelForTask(ModelRouterService.TaskType.CONTRACT_ANALYSIS);
+        ModelRouterService.ModelParams params = modelRouterService.getParamsForTask(ModelRouterService.TaskType.CONTRACT_ANALYSIS);
         String systemPrompt = promptTemplateService.buildContractAnalysisSystemPrompt(context);
         List<Map<String, String>> messages = List.of(
                 Map.of("role", "system", "content", systemPrompt),
                 Map.of("role", "user", "content", contractText)
         );
         try {
-            String answer = zhipuApiClient.chat(model, messages, 0.5, 16384);
+            String answer = zhipuApiClient.chat(model, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer);
         } catch (Exception e) {
             log.warn("Contract model {} failed, falling back: {}", model, e.getMessage());
             modelRouterService.markModelFailure(model);
             String fallback = modelRouterService.getFallbackModel(model);
-            String answer = zhipuApiClient.chat(fallback, messages, 0.5, 4096);
+            String answer = zhipuApiClient.chat(fallback, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer + "\n\n[注：当前使用降级模型，长文本分析能力受限]");
         }
     }

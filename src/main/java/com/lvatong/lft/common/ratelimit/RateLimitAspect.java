@@ -34,14 +34,20 @@ public class RateLimitAspect {
         }
 
         String redisKey = RATE_LIMIT_PREFIX + key;
-        Long current = redisTemplate.opsForValue().increment(redisKey);
-        if (current != null && current == 1) {
-            redisTemplate.expire(redisKey, 1, TimeUnit.SECONDS);
-        }
+        try {
+            Long current = redisTemplate.opsForValue().increment(redisKey);
+            if (current != null && current == 1) {
+                redisTemplate.expire(redisKey, 1, TimeUnit.SECONDS);
+            }
 
-        if (current != null && current > rateLimit.permitsPerSecond()) {
-            log.warn("Rate limit exceeded: key={} current={}", key, current);
-            throw new BusinessException(429, rateLimit.message());
+            if (current != null && current > rateLimit.permitsPerSecond()) {
+                log.warn("Rate limit exceeded: key={} current={}", key, current);
+                throw new BusinessException(429, rateLimit.message());
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Rate limit check failed, allowing request: {}", e.getMessage());
         }
 
         return joinPoint.proceed();

@@ -17,4 +17,15 @@ public class FeedbackRequest {
 
     @NotNull
     private AnswerFeedback.Rating rating;
+
+    /**
+     * 点踩原因（可选，用户填写）
+     */
+    private String badReason;
+
+    /**
+     * 问题分类标签（可选，用户选择或系统自动标注）
+     * 例如：法条错误、逻辑混乱、回答不完整、幻觉等
+     */
+    private String issueTags;
 }

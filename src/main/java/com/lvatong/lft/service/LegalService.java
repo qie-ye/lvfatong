@@ -23,7 +23,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -48,7 +47,11 @@ public class LegalService {
     private static final double CONFIDENCE_LOW_THRESHOLD = 0.6;
     private static final String LOW_CONFIDENCE_SUFFIX = "\n\n⚠️ **提示**：您的问题意图较为模糊，以上回答基于通用法律知识，建议进一步咨询专业律师确认。";
 
-    private final ExecutorService sseExecutor = Executors.newCachedThreadPool();
+    private final ExecutorService sseExecutor = new java.util.concurrent.ThreadPoolExecutor(
+            10, 50, 60, TimeUnit.SECONDS,
+            new java.util.concurrent.LinkedBlockingQueue<>(100),
+            r -> { Thread t = new Thread(r, "sse-worker"); t.setDaemon(true); return t; },
+            new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
 
     @PreDestroy
     public void shutdown() {
@@ -83,9 +86,11 @@ public class LegalService {
     }
 
     /**
-     * 获取对话消息历史
+     * 获取对话消息历史（校验用户权限）
      */
-    public List<ChatMessage> getMessages(Long sessionId) {
+    public List<ChatMessage> getMessages(Long userId, Long sessionId) {
+        chatSessionRepository.findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new com.lvatong.lft.common.exception.BusinessException("会话不存在或无权访问"));
         return chatMessageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
     }
 

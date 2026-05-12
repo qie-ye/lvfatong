@@ -8,6 +8,7 @@ scrape_configs:
     static_configs:
       - targets: ['lvatong-app:8080']
 
-  - job_name: 'nginx'
-    static_configs:
-      - targets: ['nginx-exporter:9113']
+  # nginx-exporter 未部署，暂不采集
+  # - job_name: 'nginx'
+  #   static_configs:
+  #     - targets: ['nginx-exporter:9113']

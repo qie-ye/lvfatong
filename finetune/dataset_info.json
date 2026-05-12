@@ -1,0 +1,62 @@
+{
+  "lawgpt_batch_1": {
+    "file_name": "data/batches/batch_01.json",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    },
+    "tags": {
+      "role_tag": "system",
+      "content_tag": "instruction",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "lawgpt_batch_2": {
+    "file_name": "data/batches/batch_02.json",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    },
+    "tags": {
+      "role_tag": "system",
+      "content_tag": "instruction",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "lawgpt_batch_3": {
+    "file_name": "data/batches/batch_03.json",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    },
+    "tags": {
+      "role_tag": "system",
+      "content_tag": "instruction",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  },
+  "lawgpt_batch_4": {
+    "file_name": "data/batches/batch_04.json",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output"
+    },
+    "tags": {
+      "role_tag": "system",
+      "content_tag": "instruction",
+      "user_tag": "human",
+      "assistant_tag": "gpt"
+    }
+  }
+}

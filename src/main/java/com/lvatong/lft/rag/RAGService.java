@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -100,7 +101,7 @@ public class RAGService {
     }
 
     /**
-     * 增强版检索：Query Rewriting + Iterative Retrieval + Context Compression
+     * 增强版检索：Query Rewriting + Iterative Retrieval + Reranking + Context Compression
      */
     public String retrieveAndBuildContextEnhanced(String query, String docType, String lawDomain, int topK) {
         // Step 1: Query Rewriting
@@ -142,8 +143,107 @@ public class RAGService {
             }
         }
 
-        // Step 4: Context Compression
+        // Step 4: Reranking (LLM-based rerank for better relevance)
+        if (results.size() > topK) {
+            try {
+                results = rerankWithLLM(query, results, topK);
+                log.info("Reranking completed, {} results", results.size());
+            } catch (Exception e) {
+                log.warn("Reranking failed, using original order: {}", e.getMessage());
+                // Fallback: just take topK
+                results = results.stream().limit(topK).collect(Collectors.toList());
+            }
+        }
+
+        // Step 5: Context Compression
         return compressContext(query, results);
+    }
+
+    /**
+     * Reranking：用LLM对检索结果重排
+     * 让LLM判断每个结果与查询的相关性，返回排序后的索引
+     */
+    private List<HybridSearchService.SearchResult> rerankWithLLM(
+            String query, List<HybridSearchService.SearchResult> candidates, int topK) {
+        if (candidates.size() <= topK) return candidates;
+        
+        // 取 topK*2 候选结果
+        List<HybridSearchService.SearchResult> toRerank = candidates.stream()
+                .limit(topK * 2)
+                .collect(Collectors.toList());
+        
+        // 构造 rerank prompt
+        String prompt = buildRerankPrompt(query, toRerank);
+        String result = chatService.simpleChat(prompt, "glm-4-flash", 0.1, 128);
+        
+        // 解析排序结果
+        return parseRerankResult(result, toRerank, candidates, topK);
+    }
+
+    /**
+     * 构造rerank提示词
+     */
+    private String buildRerankPrompt(String query, List<HybridSearchService.SearchResult> candidates) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("请判断以下法律条文与查询的相关性，按相关性从高到低排序。\n\n");
+        sb.append("查询：").append(query).append("\n\n");
+        sb.append("候选条文：\n");
+        for (int i = 0; i < candidates.size(); i++) {
+            String content = candidates.get(i).content();
+            String preview = content.length() > 100 ? content.substring(0, 100) + "..." : content;
+            sb.append(i + 1).append(". ").append(preview).append("\n");
+        }
+        sb.append("\n请返回排序后的编号（从最相关到最不相关），用逗号分隔，只返回编号，不要解释。\n");
+        sb.append("例如：3,1,5,2,4");
+        return sb.toString();
+    }
+
+    /**
+     * 解析rerank结果，重新排序
+     */
+    private List<HybridSearchService.SearchResult> parseRerankResult(
+            String rerankResult, 
+            List<HybridSearchService.SearchResult> toRerank,
+            List<HybridSearchService.SearchResult> originalResults,
+            int topK) {
+        try {
+            if (rerankResult == null || rerankResult.isBlank()) {
+                return originalResults.stream().limit(topK).collect(Collectors.toList());
+            }
+            
+            // 解析编号列表
+            String[] indices = rerankResult.split("[,，\\s]+");
+            List<HybridSearchService.SearchResult> reranked = new ArrayList<>();
+            
+            for (String idx : indices) {
+                try {
+                    int i = Integer.parseInt(idx.trim()) - 1; // 转为0-based索引
+                    if (i >= 0 && i < toRerank.size() && reranked.size() < topK) {
+                        reranked.add(toRerank.get(i));
+                    }
+                } catch (NumberFormatException e) {
+                    // 跳过无效编号
+                }
+            }
+            
+            // 如果解析结果不足，补充原始结果
+            if (reranked.size() < topK) {
+                Set<String> existingContents = reranked.stream()
+                        .map(HybridSearchService.SearchResult::content)
+                        .collect(Collectors.toSet());
+                for (HybridSearchService.SearchResult r : originalResults) {
+                    if (reranked.size() >= topK) break;
+                    if (!existingContents.contains(r.content())) {
+                        reranked.add(r);
+                    }
+                }
+            }
+            
+            return reranked;
+        } catch (Exception e) {
+            log.warn("Failed to parse rerank result, using original order: {}", e.getMessage());
+            return originalResults.stream().limit(topK).collect(Collectors.toList());
+        }
     }
 
     /**
@@ -189,23 +289,50 @@ public class RAGService {
     }
 
     /**
-     * 上下文压缩（方案A）：按关键词命中密度重排后截断
+     * 上下文压缩（抽取式）：从每个chunk中抽取最相关的句子
+     * 优化版：提高有效信息密度，减少无关内容
      */
     private String compressContext(String query, List<HybridSearchService.SearchResult> results) {
         String[] keywords = query.toLowerCase().split("[\\s，。？！、,\\.\\?!]+");
-        List<HybridSearchService.SearchResult> sorted = results.stream()
+        
+        List<HybridSearchService.SearchResult> compressedResults = new ArrayList<>();
+        for (HybridSearchService.SearchResult result : results) {
+            // 按句子分割
+            String[] sentences = result.content().split("[。！？]");
+            
+            // 计算每个句子的相关性分数并抽取最相关的句子
+            String compressed = Arrays.stream(sentences)
+                .filter(s -> s.trim().length() > 5)
+                .map(String::trim)
                 .sorted((a, b) -> {
-                    long scoreA = Arrays.stream(keywords)
-                            .filter(kw -> kw.length() > 1 && a.content().toLowerCase().contains(kw))
-                            .count();
-                    long scoreB = Arrays.stream(keywords)
-                            .filter(kw -> kw.length() > 1 && b.content().toLowerCase().contains(kw))
-                            .count();
-                    if (scoreB != scoreA) return Long.compare(scoreB, scoreA);
-                    return Double.compare(b.score(), a.score());
+                    long scoreA = calculateSentenceRelevance(a, keywords);
+                    long scoreB = calculateSentenceRelevance(b, keywords);
+                    return Long.compare(scoreB, scoreA);
                 })
-                .collect(Collectors.toList());
-        return buildContext(sorted);
+                .limit(3) // 每个chunk最多保留3个最相关句子
+                .reduce((a, b) -> a + "。" + b)
+                .map(s -> s + "。")
+                .orElse(result.content());
+            
+            compressedResults.add(new HybridSearchService.SearchResult(
+                compressed, result.docType(), result.lawDomain(), 
+                result.score(), result.sourceTitle(), result.sourceUrl()
+            ));
+        }
+        
+        // 按原始分数排序
+        compressedResults.sort((a, b) -> Double.compare(b.score(), a.score()));
+        return buildContext(compressedResults);
+    }
+
+    /**
+     * 计算句子与查询的相关性（基于关键词匹配）
+     */
+    private long calculateSentenceRelevance(String sentence, String[] keywords) {
+        String lowerSentence = sentence.toLowerCase();
+        return Arrays.stream(keywords)
+            .filter(kw -> kw.length() > 1 && lowerSentence.contains(kw))
+            .count();
     }
 
     /**

@@ -28,13 +28,15 @@ public class CacheConfig {
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         try {
             // 测试 Redis 连接是否可用
-            connectionFactory.getConnection().ping();
+            try (var conn = connectionFactory.getConnection()) {
+                conn.ping();
+            }
             log.info("Redis 缓存已启用");
         } catch (Exception e) {
             log.warn("Redis 不可用（{}），降级为内存缓存", e.getMessage());
             return new ConcurrentMapCacheManager(
                     "faqCache", "lawSearchCache", "lawyerListCache",
-                    "caseSearchCache", "contractTemplatesCache", "caseSearchCache",
+                    "caseSearchCache", "contractTemplatesCache",
                     "opinionCache", "chatHistoryCache"
             );
         }

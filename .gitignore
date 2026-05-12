@@ -86,3 +86,24 @@ replay_pid*
 *.swo
 *~
 ~$*
+
+### 大模型微调 ###
+finetune/data/
+finetune/logs/
+finetune/outputs/
+finetune/*.arrow
+finetune/*.bin
+finetune/*.safetensors
+finetune/*.pt
+
+### 训练产物 ###
+outputs/
+finetune/*.arrow
+finetune/*.bin
+finetune/*.safetensors
+finetune/*.pt
+
+### 个人工具配置 ###
+.opencode/
+chat-docs/
+llmfactory_env/

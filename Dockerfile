@@ -20,11 +20,13 @@ COPY --from=build /app/target/*.jar app.jar
 
 RUN mkdir -p /app/uploads/contracts && chown -R lvatong:lvatong /app
 
+RUN apk add --no-cache curl
+
 USER lvatong
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD wget -q --spider http://localhost:8080/v3/api-docs || exit 1
+  CMD curl -sf http://localhost:8080/v3/api-docs || exit 1
 
 ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

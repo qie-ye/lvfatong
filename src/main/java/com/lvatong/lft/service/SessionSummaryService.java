@@ -18,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import jakarta.annotation.PreDestroy;
 
 @Slf4j
 @Service
@@ -31,6 +34,18 @@ public class SessionSummaryService {
     private final ObjectMapper objectMapper;
 
     private final ExecutorService summaryExecutor = Executors.newFixedThreadPool(2);
+
+    @PreDestroy
+    public void shutdown() {
+        summaryExecutor.shutdown();
+        try {
+            if (!summaryExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                summaryExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            summaryExecutor.shutdownNow();
+        }
+    }
 
     private static final String SUMMARY_PROMPT = """
             请分析以下法律咨询对话，生成结构化摘要。

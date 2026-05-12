@@ -12,8 +12,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -26,19 +27,72 @@ public class HybridSearchService {
 
     private volatile boolean milvusAvailable = true;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ScheduledExecutorService milvusRetryExecutor =
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "milvus-retry");
+                t.setDaemon(true);
+                return t;
+            });
 
-    private static final double VECTOR_WEIGHT = 0.6;
-    private static final double FULLTEXT_WEIGHT = 0.4;
     private static final int DEFAULT_TOP_K = 5;
+
+    /**
+     * 根据查询类型动态计算权重
+     * 简单关键词查询：精确匹配为主（全文检索权重高）
+     * 复杂语义查询：语义理解为主（向量检索权重高）
+     */
+    private double[] calculateWeights(String query) {
+        // 简单关键词查询：精确匹配为主
+        if (isExactQuery(query)) {
+            return new double[]{0.3, 0.7}; // [vector, fulltext]
+        }
+        // 复杂语义查询：语义理解为主
+        if (isSemanticQuery(query)) {
+            return new double[]{0.7, 0.3};
+        }
+        // 默认平衡
+        return new double[]{0.6, 0.4};
+    }
+
+    /**
+     * 判断是否为精确关键词查询
+     * 特征：包含法律条文编号、长度较短、包含具体数字
+     */
+    private boolean isExactQuery(String query) {
+        return query.matches(".*第[一二三四五六七八九十百千]+条.*") ||
+               query.matches(".*第\\d+条.*") ||
+               (query.length() < 15 && !query.contains("怎么办") && !query.contains("如何"));
+    }
+
+    /**
+     * 判断是否为复杂语义查询
+     * 特征：包含疑问词、长度较长、包含多个法律概念
+     */
+    private boolean isSemanticQuery(String query) {
+        return query.contains("怎么办") ||
+               query.contains("如何") ||
+               query.contains("怎样") ||
+               query.contains("怎么") ||
+               query.length() > 30;
+    }
 
     /**
      * 混合检索：Milvus向量搜索 + MySQL FULLTEXT + RRF融合
      * 统一使用 chunk.id 作为 RRF 融合的 ID 空间
+     * 优化版：根据查询类型动态调整权重
      */
     public List<SearchResult> search(String query, String docType, String lawDomain, int topK) {
         Map<Long, Double> rrfScores = new HashMap<>();
         Map<Long, KnowledgeChunk> chunkCache = new HashMap<>();
         int k = 60;
+
+        // 动态计算权重
+        double[] weights = calculateWeights(query);
+        double vectorWeight = weights[0];
+        double fulltextWeight = weights[1];
+        log.debug("Query weights - vector: {}, fulltext: {} for query: {}", 
+                vectorWeight, fulltextWeight, 
+                query.length() > 30 ? query.substring(0, 30) + "..." : query);
 
         // 全文检索 — 以 chunk.id 为基础
         try {
@@ -49,7 +103,7 @@ public class HybridSearchService {
             for (int i = 0; i < fulltextResults.size(); i++) {
                 KnowledgeChunk chunk = fulltextResults.get(i);
                 chunkCache.put(chunk.getId(), chunk);
-                double rrfScore = FULLTEXT_WEIGHT / (k + i + 1);
+                double rrfScore = fulltextWeight / (k + i + 1);
                 rrfScores.merge(chunk.getId(), rrfScore, Double::sum);
             }
         } catch (Exception e) {
@@ -75,7 +129,7 @@ public class HybridSearchService {
                     KnowledgeChunk bestMatch = findBestChunk(docChunks, content);
                     if (bestMatch != null) {
                         chunkCache.put(bestMatch.getId(), bestMatch);
-                        double rrfScore = VECTOR_WEIGHT / (k + i + 1);
+                        double rrfScore = vectorWeight / (k + i + 1);
                         rrfScores.merge(bestMatch.getId(), rrfScore, Double::sum);
                     }
                 }
@@ -83,13 +137,10 @@ public class HybridSearchService {
                 log.warn("Vector search failed, falling back to fulltext only: {}", e.getMessage());
                 milvusAvailable = false;
                 // 5分钟后重试Milvus连接
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        milvusAvailable = true;
-                        log.info("Milvus availability reset, will retry on next search");
-                    }
-                }, 5 * 60 * 1000);
+                milvusRetryExecutor.schedule(() -> {
+                    milvusAvailable = true;
+                    log.info("Milvus availability reset, will retry on next search");
+                }, 5, TimeUnit.MINUTES);
             }
         } else {
             log.debug("Milvus unavailable, using fulltext-only search");
@@ -136,10 +187,10 @@ public class HybridSearchService {
     private String buildFilterExpr(String docType, String lawDomain) {
         List<String> conditions = new ArrayList<>();
         if (docType != null && !docType.isBlank()) {
-            conditions.add("doc_type == \"" + docType + "\"");
+            conditions.add("doc_type == \"" + docType.replace("\"", "\\\"") + "\"");
         }
         if (lawDomain != null && !lawDomain.isBlank()) {
-            conditions.add("law_domain == \"" + lawDomain + "\"");
+            conditions.add("law_domain == \"" + lawDomain.replace("\"", "\\\"") + "\"");
         }
         return String.join(" and ", conditions);
     }

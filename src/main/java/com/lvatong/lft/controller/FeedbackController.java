@@ -20,12 +20,12 @@ public class FeedbackController {
     private final FeedbackService feedbackService;
 
     @PostMapping
-    @Operation(summary = "提交反馈（每条消息每用户一次）")
+    @Operation(summary = "提交反馈（每条消息每用户一次）",
+               description = "支持点踩原因和问题分类标签，用于后续分析和优化")
     public ApiResult<Void> submitFeedback(@Valid @RequestBody FeedbackRequest request,
                                           Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
-        feedbackService.submitFeedback(userId, request.getSessionId(),
-                request.getMessageIndex(), request.getRating());
+        feedbackService.submitFeedback(userId, request);
         return ApiResult.success(null);
     }
 

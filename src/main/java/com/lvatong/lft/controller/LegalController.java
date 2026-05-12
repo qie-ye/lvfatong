@@ -59,19 +59,16 @@ public class LegalController {
     @GetMapping("/sessions")
     @Operation(summary = "获取对话列表")
     public ApiResult<List<ChatSession>> getSessions(Authentication authentication) {
-        try {
-            Long userId = (Long) authentication.getPrincipal();
-            return ApiResult.success(legalService.getSessions(userId));
-        } catch (Exception e) {
-            log.error("Failed to load sessions: {}", e.getMessage(), e);
-            return ApiResult.success(List.of());
-        }
+        Long userId = (Long) authentication.getPrincipal();
+        return ApiResult.success(legalService.getSessions(userId));
     }
 
     @GetMapping("/sessions/{sessionId}/messages")
     @Operation(summary = "获取对话消息")
-    public ApiResult<List<ChatMessage>> getMessages(@PathVariable("sessionId") Long sessionId) {
-        return ApiResult.success(legalService.getMessages(sessionId));
+    public ApiResult<List<ChatMessage>> getMessages(@PathVariable("sessionId") Long sessionId,
+                                                    Authentication authentication) {
+        Long userId = (Long) authentication.getPrincipal();
+        return ApiResult.success(legalService.getMessages(userId, sessionId));
     }
 
     @DeleteMapping("/sessions/{sessionId}")

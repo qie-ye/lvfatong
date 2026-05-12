@@ -19,11 +19,11 @@ services:
       MYSQL_PORT: 3306
       MYSQL_DB: lvatong_prod
       MYSQL_USER: lvatong
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-lvatong_prod_123}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-strong-secret-in-production-min-32-chars}
+      JWT_SECRET: ${JWT_SECRET}
       ZHIPU_API_KEY: ${ZHIPU_API_KEY}
       JPA_DDL_AUTO: validate
       MILVUS_ENABLED: ${MILVUS_ENABLED:-false}
@@ -67,10 +67,10 @@ services:
     container_name: lvatong-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_prod_123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: lvatong_prod
       MYSQL_USER: lvatong
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-lvatong_prod_123}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
@@ -179,8 +179,9 @@ services:
     image: openzipkin/zipkin:3
     container_name: lvatong-zipkin
     restart: always
-    ports:
-      - "${ZIPKIN_PORT:-9411}:9411"
+    # 生产环境不暴露端口，仅供内部网络访问
+    # ports:
+    #   - "${ZIPKIN_PORT:-9411}:9411"
     networks:
       - lvatong-net
 
@@ -205,7 +206,7 @@ services:
     ports:
       - "${GRAFANA_PORT:-3001}:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/lvatong-overview.json
     volumes:
       - grafana_data:/var/lib/grafana
