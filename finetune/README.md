@@ -64,11 +64,20 @@ python batch_scheduler.py retry-failed          # 重试失败批次
 | 参数 | 值 | 说明 |
 |------|-----|------|
 | 基座模型 | Qwen2-7B-Instruct | 中文能力优秀的 7B 模型 |
-| 微调方法 | LoRA (rank=8, alpha=16) | 参数高效微调 |
-| 量化 | QLoRA 4-bit (NF4) | 降低显存需求 |
-| 学习率 | 1e-4 | cosine 调度 |
+| 微调方法 | LoRA (rank=8, alpha=16) | 参数高效微调，可训练参数 0.26% |
+| 量化 | QLoRA 4-bit (NF4) | 降低显存需求，适配 RTX 4090 |
+| 学习率 | 1e-4 → 0 (cosine) | cosine 调度，warmup 10% |
 | 批大小 | 1 × 16(梯度累积) | 等效 batch_size=16 |
 | 优化器 | Paged AdamW 8-bit | 节省显存 |
+| 训练设备 | NVIDIA RTX 4090 | 单卡训练 |
+| 训练耗时 | 约 36 分钟 | 2 epoch，1000 条数据 |
+
+## 训练结果
+
+| 指标 | 起始 | 最终 | 说明 |
+|------|------|------|------|
+| Train Loss | 1.6964 | **1.0199** | 训练集 loss 从 1.70 收敛至 1.02 |
+| Eval Loss | 1.0506 | **1.0409** | 验证集 loss 保持稳定 |
 
 ## 训练 Loss 曲线
 
