@@ -40,17 +40,19 @@
 
 <div align="center">
 
-| 智能问答 | 合同分析 |
-|:---:|:---:|
-| ![Chat](docs/screenshots/chat.png) | ![Contract](docs/screenshots/contract.png) |
+| 智能问答 | 合同分析 | 法条检索 | 案例检索 |
+|:---:|:---:|:---:|:---:|
+| ![Chat](docs/screenshots/chat.png) | ![Contract](docs/screenshots/contract.png) | ![Laws](docs/screenshots/laws.png) | ![Cases](docs/screenshots/cases.png) |
 
-| 法条检索 | 案例检索 |
+**微调 Loss 曲线**
+
+| 训练 Loss | 验证 Loss |
 |:---:|:---:|
-| ![Laws](docs/screenshots/laws.png) | ![Cases](docs/screenshots/cases.png) |
+| ![Training Loss](docs/screenshots/training_loss.png) | ![Eval Loss](docs/screenshots/training_eval_loss.png) |
+
+> 基于 Qwen2-7B 的 LoRA 微调（train_loss: 1.70 → 1.02, eval_loss: 1.04），完整流程见 [finetune/](finetune/) 目录
 
 </div>
-
-> 训练 Loss 曲线及完整微调说明见 [finetune/](finetune/) 目录
 
 ---
 
