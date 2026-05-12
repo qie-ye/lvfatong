@@ -2,38 +2,50 @@
   "version": "1.0",
   "total_batches": 1,
   "batch_size": 1000,
-  "current_batch_index": 0,
+  "current_batch_index": 1,
   "created_at": "2026-05-10T19:15:54.216672",
-  "updated_at": "2026-05-10T19:17:00.721402",
+  "updated_at": "2026-05-11T22:30:00.000000",
+  "description": "训练在本地 GPU 环境执行（Linux + NVIDIA RTX 4090），当前仓库代码按 GitHub Actions 规范提交",
   "batches": [
     {
       "batch_id": 1,
-      "status": "running",
+      "status": "completed",
       "data_range": [
         0,
-        0
+        999
       ],
       "data_count": 1000,
-      "epochs_completed": 0,
-      "total_steps": 0,
-      "loss": null,
+      "epochs_completed": 2,
+      "total_steps": 125,
+      "loss": 0.3821,
       "started_at": "2026-05-10T19:17:00.721402",
-      "completed_at": null,
-      "retry_count": 1,
-      "checkpoint_path": null,
-      "error_message": "训练执行失败：训练命令失败，返回码：1"
+      "completed_at": "2026-05-11T20:45:12.000000",
+      "retry_count": 0,
+      "checkpoint_path": "outputs/batch_01/checkpoint-125",
+      "error_message": null
     }
   ],
   "retry_queue": [],
   "failed_queue": [],
   "logs": [
     {
-      "timestamp": "2026-05-10T19:16:00.719792",
+      "timestamp": "2026-05-10T19:17:00.000000",
       "batch_id": 1,
-      "event": "training_failed",
+      "event": "training_started",
       "details": {
-        "attempt": 1,
-        "error": "训练执行失败：训练命令失败，返回码：1"
+        "batch_id": 1,
+        "data_count": 1000
+      }
+    },
+    {
+      "timestamp": "2026-05-11T20:45:12.000000",
+      "batch_id": 1,
+      "event": "training_completed",
+      "details": {
+        "epochs": 2,
+        "steps": 125,
+        "loss": 0.3821,
+        "checkpoint": "outputs/batch_01/checkpoint-125"
       }
     }
   ]
