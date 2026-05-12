@@ -72,9 +72,11 @@ python batch_scheduler.py retry-failed          # 重试失败批次
 
 ## 训练 Loss 曲线
 
-![Training Loss](../docs/screenshots/training_loss.png)
+| 训练 Loss | 验证 Loss |
+|:---:|:---:|
+| ![Training Loss](../docs/screenshots/training_loss.png) | ![Eval Loss](../docs/screenshots/training_eval_loss.png) |
 
-> 训练完成后 LLaMA-Factory 自动生成的 loss 曲线图，展示了模型在训练过程中的收敛情况。
+> LLaMA-Factory 自动生成的 loss 曲线，左图为训练集 loss 收敛趋势，右图为验证集 loss 变化，展示了模型在 LoRA 微调过程中的学习效果。
 
 ## 文件说明
 
