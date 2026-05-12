@@ -36,21 +36,15 @@
 
 ## 🚀 快速演示
 
-<!-- 替换为实际截图/GIF 路径即可 -->
-
 <div align="center">
 
-| 智能法律问答 | 合同风险分析 |
+| 训练 Loss 曲线 | 验证 Eval Loss 曲线 |
 |:---:|:---:|
-| ![AI Chat](docs/screenshots/chat.png) | ![Contract](docs/screenshots/contract.png) |
-
-| 法条检索 | 案例检索 |
-|:---:|:---:|
-| ![Law Search](docs/screenshots/laws.png) | ![Case Search](docs/screenshots/cases.png) |
-
-> 📸 **截图占位**：将实际截图放入 `docs/screenshots/` 目录即可自动展示
+| ![Training Loss](docs/screenshots/training_loss.png) | ![Eval Loss](docs/screenshots/training_eval_loss.png) |
 
 </div>
+
+> 📈 基于 Qwen2-7B 的 LoRA 微调 loss 曲线，完整微调流程见 [finetune/](finetune/) 目录
 
 ---
 
@@ -175,12 +169,20 @@
 - 个人中心
 - 管理后台
 
+### 8) 大模型微调
+
+- 基于 Qwen2-7B-Instruct 的 LoRA 参数高效微调
+- CAIL2018/LawGPT-data 法律数据集处理 pipeline
+- 分批次训练调度器，支持断点续训与自动重试
+- 训练 Loss 曲线可视化，见 [finetune/](finetune/) 目录
+
 ---
 
 ## 技术栈如何支撑功能落地
 
 | 功能模块 | 关键实现技术 | 说明 |
 |---|---|---|
+| 大模型微调 | `LLaMA-Factory` + LoRA + QLoRA | 基于 Qwen2-7B 的法律问答模型微调，Loss 收敛曲线 |
 | 智能问答 | `Spring Web` + `SSE` + 智谱模型 | 实现流式回答与多轮咨询 |
 | 检索增强 | MySQL `FULLTEXT` + `Milvus` + `RRF` | 实现关键词与语义混合检索 |
 | 合同分析 | `PDFBox` + `POI` + 规则引擎 + AI增强 | 覆盖上传、解析、风险识别、报告输出 |
@@ -277,12 +279,13 @@ lvatong/
 ├─ src/main/resources/
 │  ├─ application.yml      # 开发环境配置
 │  ├─ application-prod.yml # 生产环境配置
-│  └─ db/migration/        # Flyway迁移脚本(V1~V6)
+│  └─ db/migration/        # Flyway迁移脚本(V1~V7)
 ├─ frontend/
 │  ├─ src/views/           # 14个业务页面
 │  ├─ src/stores/          # 8个Pinia Store
 │  ├─ src/components/      # 通用组件（通知下拉、免责声明等）
 │  └─ src/router/          # 路由与权限守卫
+├─ finetune/              # 大模型微调 pipeline（数据转换、分批训练、调度器、Loss曲线）
 ├─ docker/
 │  ├─ nginx.conf           # 反向代理+SSE无缓冲+gzip
 │  ├─ prometheus.yml       # 指标采集配置
@@ -427,6 +430,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 - `src/main/resources/db/migration/V3__add_memory_tables.sql`
 - `src/main/resources/db/migration/V4__seed_legal_cases.sql`
 - `src/main/resources/db/migration/V6__seed_faq_and_templates.sql`
+- `src/main/resources/db/migration/V7__extend_feedback_table.sql`
 
 应用启动时会按版本顺序自动执行。
 
