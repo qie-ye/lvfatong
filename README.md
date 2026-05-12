@@ -40,13 +40,17 @@
 
 <div align="center">
 
-| 训练 Loss 曲线 | 验证 Eval Loss 曲线 |
+| 智能问答 | 合同分析 |
 |:---:|:---:|
-| ![Training Loss](docs/screenshots/training_loss.png) | ![Eval Loss](docs/screenshots/training_eval_loss.png) |
+| ![Chat](docs/screenshots/chat.png) | ![Contract](docs/screenshots/contract.png) |
+
+| 法条检索 | 案例检索 |
+|:---:|:---:|
+| ![Laws](docs/screenshots/laws.png) | ![Cases](docs/screenshots/cases.png) |
 
 </div>
 
-> 📈 基于 Qwen2-7B 的 LoRA 微调 loss 曲线，完整微调流程见 [finetune/](finetune/) 目录
+> 训练 Loss 曲线及完整微调说明见 [finetune/](finetune/) 目录
 
 ---
 
