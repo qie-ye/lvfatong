@@ -62,7 +62,7 @@ public class DocumentParser {
             return switch (extension) {
                 case "pdf" -> parsePdf(file.getInputStream());
                 case "docx" -> parseDocx(file.getInputStream());
-                case "doc" -> parseDocx(file.getInputStream());
+                case "doc" -> throw new BusinessException("暂不支持旧版 .doc 格式，请在 Word 中另存为 .docx 后重试");
                 default -> throw new BusinessException("不支持的文件格式: " + extension);
             };
         } catch (BusinessException e) {

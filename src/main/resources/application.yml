@@ -77,7 +77,7 @@ zhipu:
   # 获取地址: https://open.bigmodel.cn/usercenter/apikeys
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:local-dev-secret-key-at-least-32-characters-long}
   expiration: 86400000
   refresh-expiration: 604800000
 
@@ -85,7 +85,7 @@ cors:
   allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
 
 contract:
-  upload-dir: ${CONTRACT_UPLOAD_DIR:./uploads/contracts}
+  upload-dir: ${CONTRACT_UPLOAD_DIR:C:\Users\29918\Desktop\lvatong\uploads\contracts}
 
 milvus:
   enabled: ${MILVUS_ENABLED:false}

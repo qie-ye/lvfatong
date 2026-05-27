@@ -1,0 +1,110 @@
+/* ======================================
+   律法通 Element Plus 主题
+   参考法大大风格: 明亮 · 蓝调 · 克制
+   ====================================== */
+:root {
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-3: #4f7fe8;
+  --el-color-primary-light-5: #7a9eed;
+  --el-color-primary-light-7: #a5bdf3;
+  --el-color-primary-light-8: #c1d2f7;
+  --el-color-primary-light-9: #dce6fb;
+  --el-color-primary-dark-2: #1d4ed8;
+  --el-color-primary-light: #eff6ff;
+  --el-color-primary-lighter: #f5f9ff;
+
+  --el-color-success: #22c55e;
+  --el-color-warning: #f59e0b;
+  --el-color-danger: #ef4444;
+  --el-color-info: #6b7280;
+
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 8px;
+
+  --el-box-shadow-light: 0 1px 4px rgba(37,99,235,0.06);
+  --el-box-shadow: 0 4px 16px rgba(37,99,235,0.08);
+  --el-box-shadow-dark: 0 8px 32px rgba(37,99,235,0.1);
+
+  --el-font-size-base: 13px;
+  --el-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  --el-border-color: #e5e7eb;
+  --el-border-color-light: #f3f4f6;
+  --el-border-color-lighter: #f9fafb;
+  --el-border-color-extra-light: #fcfcfd;
+
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #f8fafc;
+  --el-bg-color-overlay: #ffffff;
+  --el-fill-color: #f3f4f6;
+  --el-fill-color-light: #f9fafb;
+  --el-fill-color-lighter: #fcfcfd;
+  --el-fill-color-extra-light: #ffffff;
+  --el-fill-color-blank: #ffffff;
+
+  --el-text-color-primary: #111827;
+  --el-text-color-regular: #374151;
+  --el-text-color-secondary: #6b7280;
+  --el-text-color-placeholder: #9ca3af;
+  --el-text-color-disabled: #d1d5db;
+
+  --el-button-font-weight: 500;
+  --el-button-padding-large: 10px 24px;
+  --el-button-border-radius-large: 8px;
+  --el-input-border-radius: 8px;
+  --el-tag-border-radius: 4px;
+  --el-card-border-radius: 12px;
+  --el-dialog-border-radius: 16px;
+  --el-popover-border-radius: 10px;
+  --el-menu-item-height: 40px;
+  --el-table-header-bg-color: #f9fafb;
+  --el-table-row-hover-bg: #f3f4f6;
+}
+
+/* ======================================
+   暗色模式 Element Plus 主题覆盖
+   ====================================== */
+html.dark {
+  --el-color-primary: #3b82f6;
+  --el-color-primary-light-3: #5e9cf7;
+  --el-color-primary-light-5: #84b4f9;
+  --el-color-primary-light-7: #a8cdfb;
+  --el-color-primary-light-8: #c4dbfd;
+  --el-color-primary-light-9: #dceafe;
+  --el-color-primary-dark-2: #2563eb;
+  --el-color-primary-light: #121d3a;
+  --el-color-primary-lighter: #0d1629;
+
+  --el-color-success: #34d399;
+  --el-color-warning: #fbbf24;
+  --el-color-danger: #f87171;
+  --el-color-info: #94a3b8;
+
+  --el-bg-color: #1a2744;
+  --el-bg-color-page: #0f172a;
+  --el-bg-color-overlay: #1a2744;
+  --el-fill-color: #243b5e;
+  --el-fill-color-light: #1e3056;
+  --el-fill-color-lighter: #1a2744;
+  --el-fill-color-extra-light: #141f33;
+  --el-fill-color-blank: #1a2744;
+
+  --el-border-color: #243b5e;
+  --el-border-color-light: #1e3056;
+  --el-border-color-lighter: #1a2744;
+  --el-border-color-extra-light: #141f33;
+
+  --el-text-color-primary: #ffffff;
+  --el-text-color-regular: #e2e8f0;
+  --el-text-color-secondary: #94a3b8;
+  --el-text-color-placeholder: #64748b;
+  --el-text-color-disabled: #475569;
+
+  --el-box-shadow-light: 0 1px 4px rgba(0,0,0,0.3);
+  --el-box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  --el-box-shadow-dark: 0 8px 32px rgba(0,0,0,0.5);
+
+  --el-table-header-bg-color: #1a2744;
+  --el-table-row-hover-bg: #1e3056;
+}

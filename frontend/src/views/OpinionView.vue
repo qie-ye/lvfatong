@@ -1,8 +1,10 @@
 <template>
   <div class="opinion-page">
     <div class="page-header">
-      <h2>法律意见书</h2>
-      <el-button type="primary" @click="showGenerateDialog = true" :disabled="!aiAvailable">生成意见书</el-button>
+      <h1 class="page-title">法律意见书</h1>
+      <el-tooltip content="选择场景、填写案情，AI将生成结构化法律意见书" placement="bottom">
+        <el-button type="primary" class="generate-btn" @click="showGenerateDialog = true" :disabled="!aiAvailable">生成意见书</el-button>
+      </el-tooltip>
     </div>
 
     <el-alert v-if="!aiAvailable" type="error" :closable="false" show-icon style="margin-bottom: 16px">
@@ -11,90 +13,89 @@
     </el-alert>
 
     <div class="content-layout">
-      <!-- 左侧列表 -->
       <div class="opinion-list">
-        <div v-loading="opinionStore.loading">
-          <el-card
+        <div v-loading="opinionStore.loading" class="list-scroll">
+          <div
             v-for="op in opinionStore.opinions"
             :key="op.id"
-            shadow="hover"
             class="opinion-card"
             :class="{ active: currentId === op.id }"
             @click="selectOpinion(op.id)"
           >
             <div class="op-title">{{ op.title }}</div>
             <div class="op-meta">
-              <el-tag size="small" :type="statusType(op.status)">{{ statusLabel(op.status) }}</el-tag>
-              <span v-if="op.domain" class="op-domain">{{ op.domain }}</span>
+              <span class="status-tag" :class="'status-' + op.status.toLowerCase()">{{ statusLabel(op.status) }}</span>
               <span class="op-date">{{ formatDate(op.createdAt) }}</span>
             </div>
-          </el-card>
+          </div>
         </div>
-        <el-empty v-if="!opinionStore.loading && opinionStore.opinions.length === 0" description="暂无法律意见书" />
+        <div v-if="!opinionStore.loading && opinionStore.opinions.length === 0" class="empty-state">
+          <div class="empty-icon-circle">
+            <el-icon :size="28"><ScaleToOriginal /></el-icon>
+          </div>
+          <p>暂无法律意见书</p>
+          <span>点击右上角「生成意见书」，选择场景、填写案情，AI将生成结构化法律意见书</span>
+        </div>
       </div>
 
-      <!-- 右侧详情 -->
       <div class="opinion-detail" v-loading="opinionStore.loading">
         <template v-if="opinionStore.currentOpinion">
-          <div v-if="opinionStore.currentOpinion.status === 'GENERATING'" class="generating">
-            <el-icon class="is-loading" :size="32"><Loading /></el-icon>
+          <div v-if="opinionStore.currentOpinion.status === 'GENERATING'" class="status-screen">
+            <el-icon class="is-loading" :size="36"><Loading /></el-icon>
             <p>正在使用 GLM-4-Plus 深度推理生成法律意见书，请稍候...</p>
             <el-button type="primary" link @click="refreshOpinion">刷新查看</el-button>
           </div>
-          <div v-else-if="opinionStore.currentOpinion.status === 'FAILED'" class="failed">
-            <el-icon :size="32" color="#f56c6c"><CircleCloseFilled /></el-icon>
+          <div v-else-if="opinionStore.currentOpinion.status === 'FAILED'" class="status-screen failed-screen">
+            <el-icon :size="36" color="#ef4444"><CircleCloseFilled /></el-icon>
             <p>意见书生成失败，请重新尝试</p>
           </div>
           <template v-else>
-            <h1>{{ opinionStore.currentOpinion.title }}</h1>
+            <h1 class="detail-title">{{ opinionStore.currentOpinion.title }}</h1>
             <div class="detail-meta">
               <el-tag size="small">{{ opinionStore.currentOpinion.domain || '综合' }}</el-tag>
               <span>模型: {{ opinionStore.currentOpinion.model }}</span>
               <span>{{ formatDate(opinionStore.currentOpinion.createdAt) }}</span>
             </div>
-
             <el-divider />
-
             <div v-if="opinionStore.currentOpinion.question" class="section">
               <h3>咨询问题</h3>
               <div class="opinion-content" v-html="renderMarkdown(opinionStore.currentOpinion.question)"></div>
             </div>
-
             <div v-if="opinionStore.currentOpinion.facts" class="section">
               <h3>案件事实</h3>
               <div class="opinion-content" v-html="renderMarkdown(opinionStore.currentOpinion.facts)"></div>
             </div>
-
-            <div v-if="opinionStore.currentOpinion.analysis" class="section highlight">
+            <div v-if="opinionStore.currentOpinion.analysis" class="section">
               <h3>法律分析</h3>
               <div class="opinion-content" v-html="renderMarkdown(opinionStore.currentOpinion.analysis)"></div>
             </div>
-
             <div v-if="opinionStore.currentOpinion.conclusion" class="section">
               <h3>结论</h3>
               <div class="opinion-content" v-html="renderMarkdown(opinionStore.currentOpinion.conclusion)"></div>
             </div>
-
             <div v-if="opinionStore.currentOpinion.legalBasis" class="section">
               <h3>法律依据</h3>
               <div class="opinion-content" v-html="renderMarkdown(opinionStore.currentOpinion.legalBasis)"></div>
             </div>
-
-            <div v-if="opinionStore.currentOpinion.suggestions" class="section highlight">
+            <div v-if="opinionStore.currentOpinion.suggestions" class="section">
               <h3>建议</h3>
               <div class="opinion-content" v-html="renderMarkdown(opinionStore.currentOpinion.suggestions)"></div>
             </div>
-
-            <el-alert type="warning" :closable="false" style="margin-top: 20px">
+            <el-alert type="warning" :closable="false" style="margin-top: 20px" class="disclaimer-alert">
               本法律意见书由AI生成，仅供参考，不构成正式法律意见。如需正式法律服务，请咨询持证律师。
             </el-alert>
           </template>
         </template>
-        <el-empty v-else description="请从左侧选择或创建新的法律意见书" />
+        <div v-else class="empty-state">
+          <div class="empty-icon-circle">
+            <el-icon :size="28"><ScaleToOriginal /></el-icon>
+          </div>
+          <p>请从左侧选择意见书，或点击右上角创建新的</p>
+          <span>选择已生成的意见书查看详情，或创建新的法律意见书</span>
+        </div>
       </div>
     </div>
 
-    <!-- 生成对话框 -->
     <el-dialog v-model="showGenerateDialog" title="生成法律意见书" width="600px" @close="resetForm">
       <el-form :model="form" label-width="90px">
         <el-form-item label="标题" required>
@@ -123,7 +124,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading, CircleCloseFilled } from '@element-plus/icons-vue'
+import { Loading, CircleCloseFilled, ScaleToOriginal } from '@element-plus/icons-vue'
 import { useOpinionStore } from '@/stores/opinion'
 import { renderMarkdown } from '@/utils/renderMarkdown'
 import api from '@/api'
@@ -154,7 +155,7 @@ onMounted(async () => {
       ElMessage.warning({ message: aiMessage.value, duration: 5000 })
     }
   } catch {
-    // endpoint may not exist in older versions, ignore
+    // ignore
   }
 })
 
@@ -185,7 +186,6 @@ async function handleGenerate() {
     ElMessage.success('意见书生成中，请稍后查看')
     await opinionStore.loadOpinions()
     currentId.value = result.id
-    // 自动轮询检查状态
     pollOpinionStatus(result.id)
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : '生成失败'
@@ -199,7 +199,7 @@ function pollOpinionStatus(id: number) {
   let count = 0
   const timer = setInterval(async () => {
     count++
-    if (count > 60) { // 最多5分钟
+    if (count > 60) {
       clearInterval(timer)
       return
     }
@@ -239,19 +239,31 @@ function formatDate(dateStr: string) {
 .opinion-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px 20px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.page-header h2 {
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
   margin: 0;
-  color: #1a1a2e;
+  letter-spacing: -0.02em;
+}
+
+.generate-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.generate-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
 }
 
 .content-layout {
@@ -263,23 +275,45 @@ function formatDate(dateStr: string) {
 .opinion-list {
   width: 280px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .opinion-card {
-  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px 16px;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+}
+
+.opinion-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
 .opinion-card.active {
-  border-color: #4fc3f7;
+  border-left-color: #2563eb;
+  background: #f8fafc;
+  border-color: #e5e7eb;
+  border-left-color: #2563eb;
 }
 
 .op-title {
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 4px;
+  color: #111827;
+  margin-bottom: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -288,27 +322,49 @@ function formatDate(dateStr: string) {
 .op-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #999;
+  gap: 8px;
 }
 
-.op-domain {
-  color: #666;
+.op-date {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.status-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 18px;
+}
+
+.status-generating {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-completed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-failed {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .opinion-detail {
   flex: 1;
-  background: #fff;
-  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  border: 1px solid #ebeef5;
+  padding: 28px;
 }
 
-.opinion-detail h1 {
+.detail-title {
   font-size: 20px;
-  color: #1a1a2e;
-  margin: 0 0 8px;
+  color: #111827;
+  margin: 0 0 10px;
 }
 
 .detail-meta {
@@ -316,34 +372,24 @@ function formatDate(dateStr: string) {
   align-items: center;
   gap: 12px;
   font-size: 13px;
-  color: #999;
+  color: #4b5563;
 }
 
 .section {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .section h3 {
-  font-size: 16px;
-  color: #1a1a2e;
-  margin-bottom: 8px;
-  padding-left: 10px;
-  border-left: 3px solid #4fc3f7;
-}
-
-.section.highlight h3 {
-  border-left-color: #e6a23c;
-}
-
-.section p {
-  color: #333;
-  line-height: 1.8;
-  font-size: 14px;
-  white-space: pre-wrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 3px solid #2563eb;
 }
 
 .opinion-content {
-  color: #333;
+  color: #4b5563;
   line-height: 1.8;
   font-size: 14px;
 }
@@ -353,60 +399,109 @@ function formatDate(dateStr: string) {
 .opinion-content :deep(.md-h3) {
   font-weight: 700;
   margin: 14px 0 8px;
-  color: #1f2d3d;
+  color: #111827;
 }
 
 .opinion-content :deep(.md-h1) { font-size: 17px; }
 .opinion-content :deep(.md-h2) { font-size: 16px; }
 .opinion-content :deep(.md-h3) { font-size: 15px; }
-
-.opinion-content :deep(.md-li) {
-  margin: 6px 0;
-  padding-left: 2px;
-}
-
-.opinion-content :deep(.md-idx) {
-  font-weight: 600;
-}
-
-.opinion-content :deep(.md-bold-line) {
-  margin: 10px 0 4px;
-}
-
-.opinion-content :deep(.md-intro) {
-  margin-bottom: 8px;
-}
+.opinion-content :deep(.md-li) { margin: 6px 0; padding-left: 2px; }
+.opinion-content :deep(.md-idx) { font-weight: 600; }
+.opinion-content :deep(.md-bold-line) { margin: 10px 0 4px; }
+.opinion-content :deep(.md-intro) { margin-bottom: 8px; }
 
 .opinion-content :deep(.md-section) {
   margin: 14px 0;
-  border: 1px solid #e7ecf3;
-  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   overflow: hidden;
-  background: #fafcff;
+  background: #f8fafc;
 }
 
 .opinion-content :deep(.md-section-title) {
   padding: 10px 14px;
   font-weight: 700;
-  color: #1f2d3d;
-  background: #eef4ff;
-  border-bottom: 1px solid #e7ecf3;
+  color: #111827;
+  background: rgba(37, 99, 235, 0.04);
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.opinion-content :deep(.md-section-body) {
-  padding: 14px;
+.opinion-content :deep(.md-section-body) { padding: 14px; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  text-align: center;
+  padding: 40px 20px;
 }
 
-.generating, .failed {
+.empty-icon-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #2563eb;
+}
+
+.empty-state p {
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.empty-state span {
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.status-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  color: #999;
+  color: #4b5563;
 }
 
-.generating p, .failed p {
+.status-screen p {
   margin-top: 12px;
 }
+
+.failed-screen p {
+  margin-top: 12px;
+}
+
+.disclaimer-alert {
+  border-radius: 8px;
+}
+
+html.dark .page-title { color: var(--text-primary); }
+html.dark .opinion-card { background: var(--bg-card); border-color: var(--border); }
+html.dark .opinion-card.active { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
+html.dark .op-title { color: var(--text-primary); }
+html.dark .op-date { color: var(--text-tertiary); }
+html.dark .opinion-detail { background: var(--bg-card); border-color: var(--border); }
+html.dark .detail-title { color: var(--text-primary); }
+html.dark .detail-meta { color: var(--text-secondary); }
+html.dark .section h3 { color: var(--text-primary); border-left-color: #3b82f6; }
+html.dark .opinion-content { color: var(--text-secondary); }
+html.dark .opinion-content :deep(.md-h1),
+html.dark .opinion-content :deep(.md-h2),
+html.dark .opinion-content :deep(.md-h3) { color: var(--text-primary); }
+html.dark .opinion-content :deep(.md-section) { background: rgba(255,255,255,0.03); border-color: var(--border); }
+html.dark .opinion-content :deep(.md-section-title) { color: var(--text-primary); border-color: var(--border); background: rgba(59,130,246,0.08); }
+html.dark .empty-icon-circle { background: rgba(59,130,246,0.1); }
+html.dark .empty-state p { color: var(--text-secondary); }
+html.dark .empty-state span { color: var(--text-tertiary); }
+html.dark .status-screen { color: var(--text-secondary); }
 </style>

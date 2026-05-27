@@ -188,6 +188,6 @@ async function handleChangePassword() {
 .card-header h2 {
   margin: 0;
   font-size: 18px;
-  color: #1a1a2e;
+  color: var(--text-primary);
 }
 </style>

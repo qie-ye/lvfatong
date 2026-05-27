@@ -58,7 +58,7 @@
           <h3>用户评价 ({{ reviews.length }})</h3>
           <el-button type="primary" size="small" @click="showReviewDialog = true">写评价</el-button>
         </div>
-        <div v-if="reviews.length === 0" style="color: #999; text-align: center; padding: 20px">暂无评价</div>
+        <div v-if="reviews.length === 0" style="color: var(--text-tertiary); text-align: center; padding: 20px">暂无评价</div>
         <div v-for="r in reviews" :key="r.id" class="review-item">
           <div class="review-meta">
             <span class="review-user">{{ r.username || '匿名用户' }}</span>
@@ -259,22 +259,22 @@ function formatDate(dateStr: string) {
 .profile-info h2 {
   margin: 0 0 4px;
   font-size: 22px;
-  color: #1a1a2e;
+  color: var(--text-primary);
 }
 
 .firm {
-  color: #666;
+  color: var(--text-secondary);
   margin: 2px 0;
 }
 
 .location {
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 13px;
   margin: 2px 0;
 }
 
 .count {
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -285,7 +285,7 @@ function formatDate(dateStr: string) {
 
 .section h3 {
   font-size: 15px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -311,7 +311,7 @@ function formatDate(dateStr: string) {
 }
 .review-item {
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--gray-100);
 }
 .review-item:last-child {
   border-bottom: none;
@@ -325,11 +325,11 @@ function formatDate(dateStr: string) {
 .review-user {
   font-weight: 600;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
 }
 .review-date {
   font-size: 12px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 .review-comment {
   color: #555;

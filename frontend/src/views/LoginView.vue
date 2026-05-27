@@ -2,6 +2,11 @@
   <div class="login-view">
     <!-- Brand panel -->
     <div class="brand-panel">
+      <div class="brand-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
       <div class="brand-content">
         <h1>⚖ 律法通</h1>
         <p class="brand-subtitle">AI智能法律咨询平台</p>
@@ -17,33 +22,35 @@
     <!-- Form panel -->
     <div class="form-panel">
       <div class="form-container">
-        <h2>{{ activeTab === 'login' ? '欢迎回来' : '创建账户' }}</h2>
-        <p class="form-subtitle">{{ activeTab === 'login' ? '登录您的律法通账户' : '注册开始使用律法通' }}</p>
+        <div class="form-header">
+          <h2>{{ activeTab === 'login' ? '欢迎回来' : '创建账户' }}</h2>
+          <p class="form-subtitle">{{ activeTab === 'login' ? '登录您的律法通账户' : '注册开始使用律法通' }}</p>
+        </div>
 
         <el-tabs v-model="activeTab" class="auth-tabs">
           <el-tab-pane label="登录" name="login">
             <el-form :model="loginForm" @submit.prevent="handleLogin" label-position="top" size="large">
               <el-form-item label="用户名">
-                <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User" />
+                <el-input v-model="loginForm.username" placeholder="请输入用户名" :prefix-icon="User" />
               </el-form-item>
               <el-form-item label="密码">
-                <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password prefix-icon="Lock" />
+                <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password :prefix-icon="Lock" />
               </el-form-item>
-              <el-button type="primary" @click="handleLogin" :loading="loading" round style="width: 100%; margin-top: 8px">登录</el-button>
+              <el-button type="primary" @click="handleLogin" :loading="loading" round class="submit-btn">登录</el-button>
             </el-form>
           </el-tab-pane>
           <el-tab-pane label="注册" name="register">
             <el-form :model="registerForm" @submit.prevent="handleRegister" label-position="top" size="large">
               <el-form-item label="用户名">
-                <el-input v-model="registerForm.username" placeholder="3-50字符" prefix-icon="User" />
+                <el-input v-model="registerForm.username" placeholder="3-50字符" :prefix-icon="User" />
               </el-form-item>
               <el-form-item label="密码">
-                <el-input v-model="registerForm.password" type="password" placeholder="6位以上" show-password prefix-icon="Lock" />
+                <el-input v-model="registerForm.password" type="password" placeholder="6位以上" show-password :prefix-icon="Lock" />
               </el-form-item>
               <el-form-item label="昵称">
-                <el-input v-model="registerForm.nickname" placeholder="可选" prefix-icon="UserFilled" />
+                <el-input v-model="registerForm.nickname" placeholder="可选" :prefix-icon="UserFilled" />
               </el-form-item>
-              <el-button type="primary" @click="handleRegister" :loading="loading" round style="width: 100%; margin-top: 8px">注册</el-button>
+              <el-button type="primary" @click="handleRegister" :loading="loading" round class="submit-btn">注册</el-button>
             </el-form>
           </el-tab-pane>
         </el-tabs>
@@ -61,6 +68,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
+import { User, Lock, UserFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -121,7 +129,7 @@ async function handleRegister() {
 /* Brand panel */
 .brand-panel {
   flex: 1;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  background: linear-gradient(135deg, #0f1b3d 0%, #122150 40%, #0d2b5e 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,11 +138,49 @@ async function handleRegister() {
   overflow: hidden;
 }
 
-.brand-panel::after {
-  content: '';
+.brand-shapes {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 80%, rgba(79, 195, 247, 0.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.06;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: var(--color-primary-400);
+  top: -60px;
+  right: -60px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.shape-2 {
+  width: 200px;
+  height: 200px;
+  background: var(--color-accent);
+  bottom: -40px;
+  left: 10%;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+.shape-3 {
+  width: 150px;
+  height: 150px;
+  background: var(--color-primary-300);
+  top: 50%;
+  left: 20%;
+  animation: float 7s ease-in-out infinite 1s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -20px) scale(1.05); }
+  66% { transform: translate(-10px, 10px) scale(0.95); }
 }
 
 .brand-content {
@@ -153,7 +199,7 @@ async function handleRegister() {
 
 .brand-subtitle {
   font-size: 18px;
-  color: var(--primary, #4fc3f7);
+  color: var(--color-primary-300);
   margin: 0 0 40px;
   font-weight: 500;
 }
@@ -161,14 +207,14 @@ async function handleRegister() {
 .brand-features {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .brand-feature {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: rgba(255, 255, 255, 0.75);
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -177,8 +223,9 @@ async function handleRegister() {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--primary, #4fc3f7);
+  background: var(--color-primary-400);
   flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(59, 111, 240, 0.5);
 }
 
 /* Form panel */
@@ -188,36 +235,58 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  background: #fff;
+  background: var(--bg-card);
 }
 
 .form-container {
   width: 100%;
-  max-width: 380px;
+  max-width: 400px;
+}
+
+.form-header {
+  margin-bottom: 8px;
 }
 
 .form-container h2 {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--text-primary);
   margin: 0 0 4px;
+  letter-spacing: -0.02em;
 }
 
 .form-subtitle {
-  color: #999;
+  color: var(--text-secondary);
   font-size: 14px;
-  margin: 0 0 28px;
+  margin: 0;
 }
 
 .auth-tabs {
   margin-bottom: 16px;
 }
 
+.auth-tabs :deep(.el-tabs__header) {
+  margin-bottom: 20px;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 15px;
+  padding: 12px 0;
+  height: auto;
+  font-weight: 600;
+}
+
+.submit-btn:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(26, 92, 208, 0.35);
+}
+
 .form-footer {
   text-align: center;
   font-size: 12px;
-  color: #bbb;
-  margin-top: 20px;
+  color: var(--text-tertiary);
+  margin-top: 24px;
 }
 
 /* Responsive */
@@ -226,7 +295,7 @@ async function handleRegister() {
     flex-direction: column;
   }
   .brand-panel {
-    padding: 40px 20px;
+    padding: 40px 24px;
     min-height: auto;
   }
   .brand-content h1 {
@@ -236,7 +305,10 @@ async function handleRegister() {
     display: none;
   }
   .form-panel {
-    padding: 24px 20px;
+    padding: 28px 20px;
+  }
+  .form-container h2 {
+    font-size: 24px;
   }
 }
 </style>

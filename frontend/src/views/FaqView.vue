@@ -1,61 +1,54 @@
 <template>
   <div class="faq-view">
-    <div class="faq-header">
-      <h2>常见法律问题</h2>
-      <p class="description">预置高频法律问题与标准答案，快速获取专业解答</p>
-    </div>
+    <h1 class="page-title">常见法律问题</h1>
 
     <div class="search-bar">
       <el-input
         v-model="searchQuery"
-        placeholder="搜索常见问题..."
+        placeholder="搜索常见法律问题..."
         size="large"
         clearable
         @keyup.enter="handleSearch"
       >
-        <template #append>
-          <el-button @click="handleSearch" :loading="searching">搜索</el-button>
+        <template #prefix>
+          <el-icon :size="18"><Search /></el-icon>
         </template>
       </el-input>
     </div>
 
     <div class="category-tabs">
-      <el-tag
-        :type="activeCategory === '' ? '' : 'info'"
-        class="category-tag"
+      <span
+        :class="['category-tag', { active: activeCategory === '' }]"
         @click="selectCategory('')"
-        effect="plain"
-      >全部</el-tag>
-      <el-tag
+      >全部</span>
+      <span
         v-for="cat in categories"
         :key="cat"
-        :type="activeCategory === cat ? '' : 'info'"
-        class="category-tag"
+        :class="['category-tag', { active: activeCategory === cat }]"
         @click="selectCategory(cat)"
-        effect="plain"
-      >{{ cat }}</el-tag>
+      >{{ cat }}</span>
     </div>
 
-    <div class="faq-list">
-      <el-collapse v-model="activeNames" accordion>
-        <el-collapse-item
-          v-for="faq in displayFaqs"
-          :key="faq.id"
-          :name="faq.id"
-        >
-          <template #title>
-            <div class="faq-question">
-              <el-icon><question-filled /></el-icon>
-              <span>{{ faq.question }}</span>
-              <el-tag v-if="faq.category" size="small" type="info" class="faq-category-tag">{{ faq.category }}</el-tag>
-            </div>
-          </template>
-          <div class="faq-answer">{{ faq.answer }}</div>
-        </el-collapse-item>
-      </el-collapse>
-
-      <div v-if="displayFaqs.length === 0 && !loading" class="no-result">
-        <p>暂无匹配的常见问题</p>
+    <div v-loading="loading" class="faq-list">
+      <template v-if="displayFaqs.length > 0">
+        <el-collapse v-model="activeNames" accordion>
+          <el-collapse-item v-for="faq in displayFaqs" :key="faq.id" :name="faq.id">
+            <template #title>
+              <div class="faq-question">
+                <span class="faq-text">{{ faq.question }}</span>
+                <span v-if="faq.category" class="faq-category-tag">{{ faq.category }}</span>
+                <span class="faq-arrow">&#8250;</span>
+              </div>
+            </template>
+            <div class="faq-answer">{{ faq.answer }}</div>
+          </el-collapse-item>
+        </el-collapse>
+      </template>
+      <div v-else class="empty-state">
+        <div class="empty-icon-circle">
+          <el-icon :size="28"><QuestionFilled /></el-icon>
+        </div>
+        <p>未找到相关问题</p>
       </div>
     </div>
   </div>
@@ -63,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { QuestionFilled } from '@element-plus/icons-vue'
+import { QuestionFilled, Search, Document, Coin } from '@element-plus/icons-vue'
 import api from '@/api'
 import { ElMessage } from 'element-plus'
 
@@ -90,6 +83,11 @@ const displayFaqs = computed(() => {
   if (!activeCategory.value) return allFaqs.value
   return allFaqs.value.filter(f => f.category === activeCategory.value)
 })
+
+function categoryIcon(cat: string) {
+  const map: Record<string, any> = { '劳动法': Document, '合同法': Document, '婚姻法': Coin }
+  return map[cat] || null
+}
 
 onMounted(async () => {
   await loadData()
@@ -139,62 +137,216 @@ function selectCategory(cat: string) {
 
 <style scoped>
 .faq-view {
-  max-width: 900px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 40px 24px 60px;
+  background: var(--bg);
 }
-.faq-header {
-  text-align: center;
-  margin-bottom: 24px;
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+  letter-spacing: -0.02em;
 }
-.faq-header h2 {
-  color: #1a1a2e;
-  margin-bottom: 8px;
-}
-.description {
-  color: #999;
-  font-size: 14px;
-}
+
 .search-bar {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
+
+.search-bar :deep(.el-input__wrapper) {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-bar :deep(.el-input__wrapper:hover) {
+  border-color: #2563eb;
+}
+
+.search-bar :deep(.el-input__wrapper.is-focus) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.search-bar :deep(.el-input__inner) {
+  color: var(--text-primary);
+}
+
 .category-tabs {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
+
 .category-tag {
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 13px;
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  user-select: none;
 }
+
 .category-tag:hover {
-  opacity: 0.8;
+  border-color: #2563eb;
+  color: #2563eb;
+  background: var(--color-primary-50);
 }
+
+html.dark .category-tag:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.category-tag.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
 .faq-list {
-  background: #fff;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.04);
+  overflow: hidden;
 }
+
+:deep(.el-collapse) {
+  border: none;
+}
+
+:deep(.el-collapse-item__header) {
+  height: auto;
+  padding: 16px 20px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: transparent;
+  border-bottom: 1px solid var(--border-light);
+  line-height: 1.5;
+  transition: background 0.2s ease;
+}
+
+:deep(.el-collapse-item__header:hover) {
+  background: var(--gray-100);
+}
+
+html.dark :deep(.el-collapse-item__header:hover) {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+:deep(.el-collapse-item__wrap) {
+  background: transparent;
+  border-bottom: 1px solid var(--border-light);
+}
+
+:deep(.el-collapse-item__content) {
+  padding: 12px 20px 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
 .faq-question {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 10px;
+  width: 100%;
+}
+
+.faq-text {
+  flex: 1;
   font-weight: 500;
 }
+
 .faq-category-tag {
-  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 4px;
+  line-height: 1.5;
 }
+
+.faq-arrow {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 16px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.el-collapse-item.is-active) .faq-arrow {
+  transform: rotate(90deg);
+}
+
 .faq-answer {
   font-size: 14px;
-  line-height: 1.8;
-  color: #555;
+  line-height: 1.7;
+  color: var(--text-secondary);
   white-space: pre-wrap;
-  padding: 8px 0;
 }
-.no-result {
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px;
   text-align: center;
-  color: #999;
-  padding: 60px 0;
+}
+
+.empty-icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #2563eb;
+}
+
+html.dark .empty-icon-circle {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.empty-state p {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  margin: 0;
+}
+
+html.dark .faq-list {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark :deep(.el-collapse-item__wrap) {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html.dark .faq-category-tag {
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+html.dark .search-bar :deep(.el-input__wrapper) {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 </style>

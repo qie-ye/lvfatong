@@ -98,7 +98,7 @@ onMounted(async () => {
 
 .main-card h1 {
   font-size: 20px;
-  color: #1a1a2e;
+  color: var(--text-primary);
   margin: 0 0 12px;
 }
 
@@ -112,7 +112,7 @@ onMounted(async () => {
 
 .meta-item {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .keywords {
@@ -125,20 +125,20 @@ onMounted(async () => {
 
 .section h3 {
   font-size: 16px;
-  color: #1a1a2e;
+  color: var(--text-primary);
   margin-bottom: 8px;
   padding-left: 10px;
-  border-left: 3px solid #4fc3f7;
+  border-left: 3px solid var(--color-primary-500);
 }
 
 .section p {
-  color: #333;
+  color: var(--text-primary);
   line-height: 1.8;
   font-size: 14px;
 }
 
 .ai-content {
-  color: #333;
+  color: var(--text-primary);
   line-height: 1.8;
   font-size: 14px;
 }

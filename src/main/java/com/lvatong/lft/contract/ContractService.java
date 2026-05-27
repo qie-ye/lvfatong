@@ -63,15 +63,6 @@ public class ContractService {
         String extension = documentParser.getExtension(originalFilename != null ? originalFilename : "unknown");
         String storedFilename = UUID.randomUUID() + "." + extension;
 
-        Path uploadPath = Paths.get(uploadDir);
-        try {
-            Files.createDirectories(uploadPath);
-            Path filePath = uploadPath.resolve(storedFilename);
-            file.transferTo(filePath.toFile());
-        } catch (IOException e) {
-            throw new BusinessException("文件保存失败: " + e.getMessage());
-        }
-
         ContractDocument doc = new ContractDocument();
         doc.setUserId(userId);
         doc.setFilename(originalFilename);
@@ -90,6 +81,15 @@ public class ContractService {
             doc.setStatus(ContractDocument.AnalysisStatus.FAILED);
             contractDocumentRepository.save(doc);
             throw new BusinessException("文档解析失败: " + e.getMessage());
+        }
+
+        Path uploadPath = Paths.get(uploadDir);
+        try {
+            Files.createDirectories(uploadPath);
+            Path filePath = uploadPath.resolve(storedFilename);
+            file.transferTo(filePath.toFile());
+        } catch (IOException e) {
+            throw new BusinessException("文件保存失败: " + e.getMessage());
         }
 
         doc = contractDocumentRepository.save(doc);

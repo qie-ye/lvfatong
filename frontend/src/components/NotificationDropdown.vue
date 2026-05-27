@@ -1,7 +1,7 @@
 <template>
   <div class="notif-wrapper" v-click-outside="() => open = false">
     <button class="bell-btn" @click="open = !open" :title="unreadCount > 0 ? `${unreadCount}条未读` : '通知'">
-      <span class="bell-icon">🔔</span>
+      <el-icon :size="18"><Bell /></el-icon>
       <span v-if="unreadCount > 0" class="badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
     </button>
 
@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Bell } from '@element-plus/icons-vue'
 import { useNotificationStore } from '@/stores/notification'
 
 const store = useNotificationStore()
@@ -86,25 +87,24 @@ function formatTime(iso: string): string {
   border: none;
   cursor: pointer;
   position: relative;
-  padding: 4px 6px;
-  border-radius: 6px;
-  line-height: 1;
-  transition: background 0.15s;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: #4b5563;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
 }
 
 .bell-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.bell-icon {
-  font-size: 18px;
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .badge {
   position: absolute;
-  top: -2px;
-  right: -4px;
-  background: #f56c6c;
+  top: 0;
+  right: 0;
+  background: #ef4444;
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -122,23 +122,24 @@ function formatTime(iso: string): string {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 320px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  width: 340px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(37, 99, 235, 0.08);
   z-index: 200;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #f0f0f0;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .read-all-btn {
@@ -146,12 +147,15 @@ function formatTime(iso: string): string {
   border: none;
   cursor: pointer;
   font-size: 12px;
-  color: #4fc3f7;
-  padding: 0;
+  color: #2563eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
 }
 
 .read-all-btn:hover {
-  color: #0ea5e9;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
 }
 
 .notif-list {
@@ -161,9 +165,9 @@ function formatTime(iso: string): string {
 
 .empty-tip {
   text-align: center;
-  color: #aaa;
+  color: #9ca3af;
   font-size: 13px;
-  padding: 32px 0;
+  padding: 40px 0;
 }
 
 .notif-item {
@@ -171,22 +175,22 @@ function formatTime(iso: string): string {
   gap: 10px;
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #f8f8f8;
+  border-bottom: 1px solid #f3f4f6;
   transition: background 0.15s;
 }
 
 .notif-item:hover {
-  background: #f9fafb;
+  background: #f8fafc;
 }
 
 .notif-item.unread {
-  background: #f0f9ff;
+  background: rgba(37, 99, 235, 0.04);
 }
 
 .notif-dot {
   width: 8px;
   height: 8px;
-  background: #4fc3f7;
+  background: #2563eb;
   border-radius: 50%;
   flex-shrink: 0;
   margin-top: 5px;
@@ -200,31 +204,28 @@ function formatTime(iso: string): string {
 .notif-title {
   font-size: 13px;
   font-weight: 600;
-  color: #222;
+  color: #111827;
   margin-bottom: 2px;
 }
 
 .notif-content {
   font-size: 12px;
-  color: #666;
+  color: #4b5563;
   line-height: 1.5;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .notif-time {
   font-size: 11px;
-  color: #aaa;
+  color: #9ca3af;
   margin-top: 4px;
 }
 
 .dropdown-enter-active, .dropdown-leave-active {
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .dropdown-enter-from, .dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-8px) scale(0.97);
 }
 </style>

@@ -1,380 +1,231 @@
 <template>
   <div class="home">
-    <!-- Hero Section -->
     <section class="hero">
-      <div class="hero-bg"></div>
       <div class="hero-content">
-        <h1 class="hero-title">
-          <span class="title-accent">律法通</span>
-        </h1>
-        <p class="hero-subtitle">AI智能法律咨询平台</p>
-        <p class="hero-desc">基于智谱AI大模型与RAG技术，为您提供专业、准确、高效的法律服务</p>
+        <h1 class="hero-title">律法通</h1>
+        <p class="hero-subtitle">专业法律AI辅助平台</p>
+        <p class="hero-desc">基于大语言模型与法律知识库，为法律从业者提供合同审查、法条检索、案例分析与文书起草工具</p>
         <div class="hero-actions">
-          <el-button type="primary" size="large" round @click="$router.push('/chat')">
-            <el-icon><ChatDotRound /></el-icon>
-            开始法律咨询
-          </el-button>
-          <el-button size="large" round @click="$router.push('/contract')">
-            <el-icon><Document /></el-icon>
-            合同智能分析
-          </el-button>
+          <el-button type="primary" size="large" @click="$router.push('/chat')">进入法律咨询</el-button>
+          <el-button size="large" class="btn-outline" @click="$router.push('/contract')">合同智能分析</el-button>
         </div>
       </div>
     </section>
 
-    <!-- Stats -->
     <section class="stats">
-      <div class="stat-item" v-for="s in stats" :key="s.label">
-        <div class="stat-value">{{ s.value }}</div>
+      <div class="stat-item" v-for="s in statList" :key="s.label">
+        <div class="stat-value">{{ s.display }}</div>
         <div class="stat-label">{{ s.label }}</div>
       </div>
     </section>
 
-    <!-- Features -->
-    <section class="features">
-      <h2 class="section-title">核心功能</h2>
-      <div class="feature-grid">
-        <div
-          v-for="f in features"
-          :key="f.title"
-          class="feature-card"
-          @click="$router.push(f.link)"
-        >
-          <div class="feature-icon" :style="{ background: f.color }">
-            <el-icon :size="28" color="#fff"><component :is="f.icon" /></el-icon>
+    <section class="tools">
+      <div class="tool-tabs">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['tool-tab', { active: activeTab === tab.key }]"
+          @click="activeTab = tab.key"
+        >{{ tab.label }}</button>
+      </div>
+
+      <div class="tool-grid" v-if="activeTab === 'features'">
+        <div v-for="f in features" :key="f.title" class="tool-card" @click="$router.push(f.link)">
+          <div class="tool-icon">
+            <el-icon :size="22" color="#2563eb"><component :is="f.icon" /></el-icon>
           </div>
-          <h3>{{ f.title }}</h3>
-          <p>{{ f.desc }}</p>
-          <span class="feature-link">了解更多 →</span>
+          <div class="tool-body">
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.desc }}</p>
+          </div>
+          <span class="tool-link">进入工具 →</span>
+        </div>
+      </div>
+
+      <div class="tool-grid" v-else>
+        <div v-for="s in services" :key="s.title" class="tool-card" @click="$router.push(s.link)">
+          <div class="tool-icon">
+            <el-icon :size="22" color="#2563eb"><component :is="s.icon" /></el-icon>
+          </div>
+          <div class="tool-body">
+            <h3>{{ s.title }}</h3>
+            <p>{{ s.desc }}</p>
+          </div>
+          <span class="tool-link">了解更多 →</span>
         </div>
       </div>
     </section>
 
-    <!-- Services -->
-    <section class="services">
-      <h2 class="section-title">专业服务</h2>
-      <div class="service-grid">
-        <div v-for="s in services" :key="s.title" class="service-card" @click="$router.push(s.link)">
-          <div class="service-badge">{{ s.badge }}</div>
-          <h3>{{ s.title }}</h3>
-          <p>{{ s.desc }}</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA -->
     <section class="cta">
-      <h2>开始您的智能法律之旅</h2>
-      <p>注册即可免费体验AI法律咨询服务</p>
-      <el-button type="primary" size="large" round @click="$router.push(authStore.isLoggedIn ? '/chat' : '/login')">
-        {{ authStore.isLoggedIn ? '立即咨询' : '免费注册' }}
+      <h2>开始使用律法通</h2>
+      <p>注册账号即可体验AI法律辅助服务</p>
+      <el-button type="primary" size="large" @click="$router.push(authStore.isLoggedIn ? '/chat' : '/login')">
+        {{ authStore.isLoggedIn ? '进入工作台' : '免费注册' }}
       </el-button>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ChatDotRound, Document, Search, ScaleToOriginal, Reading, EditPen, User, TrendCharts } from '@element-plus/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { useTransition } from '@vueuse/core'
+import { ChatDotRound, Document, Search, ScaleToOriginal, Reading, EditPen, User } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
+const activeTab = ref('features')
 
-const stats = [
-  { value: '10万+', label: '法律知识条目' },
-  { value: '6+', label: '核心法律领域' },
-  { value: '99.2%', label: '咨询满意度' },
-  { value: '24/7', label: '全天候服务' }
+const tabs = [
+  { key: 'features', label: '核心工具' },
+  { key: 'services', label: '增值服务' }
 ]
 
+const statsData = [
+  { target: 120000, suffix: '+', label: '法律法规及司法解释' },
+  { target: 85000, suffix: '+', label: '裁判文书收录' },
+  { target: 14, suffix: '类', label: '法律文书模板' },
+  { target: 7, suffix: '', label: '核心法律领域覆盖' }
+]
+
+const animatedValues = statsData.map(() => ref(0))
+
+const statList = computed(() => {
+  return statsData.map((s, i) => {
+    const val = animatedValues[i].value
+    let display = ''
+    if (s.target >= 10000) {
+      display = (s.target === 120000 ? '12' : s.target === 85000 ? '8.5' : '') + '万'
+    } else {
+      display = Math.round(val).toString()
+    }
+    return { label: s.label, display: (s.prefix ?? '') + display + s.suffix }
+  })
+})
+
+onMounted(() => {
+  statsData.forEach((s, i) => {
+    useTransition(animatedValues[i], { duration: 1200, transition: [0, 0.3, 0.1, 1] })
+    setTimeout(() => {
+      const source = ref(0)
+      const { pause } = useTransition(source, {
+        duration: 1200, transition: [0, 0.3, 0.1, 1],
+        onFinished() { pause() }
+      })
+      source.value = s.target
+    }, 200 + i * 100)
+  })
+})
+
 const features = [
-  { title: '智能法律问答', desc: '基于RAG检索增强生成，结合法律知识库，提供专业准确的实时法律咨询', icon: ChatDotRound, color: 'linear-gradient(135deg, #667eea, #764ba2)', link: '/chat' },
-  { title: '合同风险分析', desc: 'AI自动识别合同风险条款，提供条款级风险评估、修改建议和合同对比', icon: Document, color: 'linear-gradient(135deg, #f093fb, #f5576c)', link: '/contract' },
-  { title: '法律条文检索', desc: '向量语义检索+全文检索融合，快速精准定位相关法律条文', icon: Search, color: 'linear-gradient(135deg, #4facfe, #00f2fe)', link: '/laws' },
-  { title: '法律意见生成', desc: 'GLM-4-Plus深度推理，生成结构化法律意见书，含法律分析与结论', icon: ScaleToOriginal, color: 'linear-gradient(135deg, #43e97b, #38f9d7)', link: '/opinions' },
-  { title: '法律文书生成', desc: 'AI一键生成起诉状、答辩状、仲裁申请书等6类法律文书', icon: EditPen, color: 'linear-gradient(135deg, #fa709a, #fee140)', link: '/documents' },
-  { title: '案例智能检索', desc: '语义+关键词双引擎检索海量案例，AI深度分析相似案例', icon: Reading, color: 'linear-gradient(135deg, #a18cd1, #fbc2eb)', link: '/cases' }
+  { title: '法律咨询', desc: '基于大语言模型与法律知识库，提供多轮对话式的法律问题解答与分析', icon: ChatDotRound, link: '/chat' },
+  { title: '合同审查', desc: '上传合同文件，自动识别风险条款并提供逐条修改建议', icon: Document, link: '/contract' },
+  { title: '法条检索', desc: '语义搜索与关键词检索结合，快速定位法律条文及司法解释', icon: Search, link: '/laws' },
+  { title: '法律意见书', desc: '根据案情描述，自动生成包含事实分析、法律依据的结构化意见书', icon: ScaleToOriginal, link: '/opinions' },
+  { title: '文书起草', desc: '支持起诉状、答辩状、仲裁申请书等6类法律文书一键生成', icon: EditPen, link: '/documents' },
+  { title: '案例检索', desc: '搜索相似案例，分析裁判要旨，辅助诉讼策略制定', icon: Reading, link: '/cases' }
 ]
 
 const services = [
-  { title: '律师智能匹配', desc: '根据法律问题AI推荐专业律师，支持协同过滤精准推荐', badge: '推荐', link: '/lawyers' },
-  { title: '常见问题速查', desc: '覆盖劳动法、婚姻法、合同法等高频法律问题解答', badge: '免费', link: '/faq' },
-  { title: '数据安全合规', desc: '全链路加密传输，数据脱敏存储，符合法律行业合规要求', badge: '安全', link: '/chat' }
+  { title: '律师匹配', desc: '按执业领域与经验匹配律师，支持在线预约咨询', icon: User, link: '/lawyers' },
+  { title: '常见问题', desc: '覆盖劳动、婚姻、合同、房产等领域的法律问题解答', icon: ChatDotRound, link: '/faq' },
+  { title: '数据合规', desc: '全链路加密，数据脱敏存储，符合法律行业数据安全要求', icon: Document, link: '/chat' }
 ]
 </script>
 
 <style scoped>
-.home {
-  overflow-x: hidden;
-}
+.home { background: var(--bg); }
 
-/* Hero */
 .hero {
-  position: relative;
-  min-height: 520px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  background: linear-gradient(170deg, #eff6ff 0%, #f8fafc 40%, #fff 100%);
+  text-align: center; padding: 100px 24px 80px;
+  border-bottom: 1px solid var(--border);
 }
+.hero-content { max-width: 640px; margin: 0 auto; }
+.hero-title { font-size: 42px; font-weight: 700; color: var(--color-primary-600); letter-spacing: 6px; margin: 0 0 12px; }
+.hero-subtitle { font-size: 20px; color: var(--gray-600); margin: 0 0 14px; font-weight: 500; }
+.hero-desc { font-size: 15px; color: var(--text-tertiary); line-height: 1.75; margin: 0 0 36px; }
+.hero-actions { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.hero-actions .el-button { padding: 12px 28px; font-size: 15px; font-weight: 500; border-radius: 8px; }
+.btn-outline { border: 1px solid #d1d5db !important; color: var(--gray-600) !important; background: #fff !important; }
+.btn-outline:hover { border-color: var(--color-primary-400) !important; color: var(--color-primary-600) !important; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
 
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-  z-index: 0;
-}
-
-.hero-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 30% 50%, rgba(79, 195, 247, 0.15) 0%, transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 40%);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 80px 20px 60px;
-  max-width: 700px;
-}
-
-.hero-title {
-  font-size: 56px;
-  font-weight: 800;
-  margin: 0 0 12px;
-  letter-spacing: 4px;
-}
-
-.title-accent {
-  background: linear-gradient(135deg, #4fc3f7, #81d4fa, #b3e5fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-subtitle {
-  font-size: 22px;
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 12px;
-  font-weight: 500;
-}
-
-.hero-desc {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.55);
-  margin: 0 0 36px;
-  line-height: 1.6;
-}
-
-.hero-actions {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.hero-actions .el-button {
-  font-size: 16px;
-  padding: 12px 32px;
-  height: auto;
-}
-
-/* Stats */
 .stats {
-  display: flex;
-  justify-content: center;
-  gap: 48px;
-  padding: 40px 20px;
-  background: #fff;
-  flex-wrap: wrap;
+  display: flex; justify-content: center; gap: 72px;
+  padding: 40px 20px; background: #fff; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+}
+.stat-item { text-align: center; position: relative; }
+.stat-item:not(:last-child)::after { content: ''; position: absolute; right: -36px; top: 10%; height: 80%; width: 1px; background: var(--border); }
+.stat-value { font-size: 36px; font-weight: 700; color: var(--color-primary-600); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 13px; color: var(--text-tertiary); margin-top: 6px; }
+
+/* Tab switching */
+.tools { padding: 64px 20px; max-width: 1100px; margin: 0 auto; }
+.tool-tabs { display: flex; justify-content: center; gap: 0; margin-bottom: 40px; border-bottom: 2px solid var(--border); }
+.tool-tab {
+  padding: 12px 32px; font-size: 15px; font-weight: 500;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-tertiary); position: relative;
+  transition: color 0.2s;
+}
+.tool-tab:hover { color: var(--color-primary-600); }
+.tool-tab.active { color: var(--color-primary-600); font-weight: 600; }
+.tool-tab.active::after {
+  content: ''; position: absolute; bottom: -2px; left: 20%; right: 20%;
+  height: 2px; background: var(--color-primary-500); border-radius: 1px;
 }
 
-.stat-item {
-  text-align: center;
-}
+.tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 
-.stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1a1a2e;
-  line-height: 1.2;
+.tool-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px 24px; cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex; flex-direction: column;
 }
-
-.stat-label {
-  font-size: 13px;
-  color: #999;
-  margin-top: 4px;
+.tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(37,99,235,0.1);
+  border-color: var(--color-primary-200);
 }
-
-/* Section Title */
-.section-title {
-  text-align: center;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin: 0 0 36px;
-  position: relative;
+.tool-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--color-primary-50); display: flex;
+  align-items: center; justify-content: center; margin-bottom: 16px;
 }
-
-.section-title::after {
-  content: '';
-  display: block;
-  width: 40px;
-  height: 3px;
-  background: linear-gradient(90deg, #4fc3f7, #667eea);
-  margin: 12px auto 0;
-  border-radius: 2px;
-}
-
-/* Features */
-.features {
-  padding: 60px 20px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.feature-card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 32px 24px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #f0f0f0;
-  position: relative;
-  overflow: hidden;
-}
-
-.feature-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-  border-color: transparent;
-}
-
-.feature-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.feature-card h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0 0 8px;
-}
-
-.feature-card p {
-  font-size: 13px;
-  color: #888;
-  line-height: 1.7;
-  margin: 0 0 16px;
-}
-
-.feature-link {
-  font-size: 13px;
-  color: #4fc3f7;
-  font-weight: 500;
-}
-
-/* Services */
-.services {
-  padding: 60px 20px;
-  background: #f8fafc;
-}
-
-.service-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.service-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 28px 24px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  border: 1px solid #ebeef5;
-  position: relative;
-}
-
-.service-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  border-color: #4fc3f7;
-}
-
-.service-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, #4fc3f7, #667eea);
-  color: #fff;
-  font-size: 11px;
-  padding: 2px 10px;
-  border-radius: 10px;
-  font-weight: 500;
-}
-
-.service-card h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0 0 8px;
-}
-
-.service-card p {
-  font-size: 13px;
-  color: #888;
-  line-height: 1.6;
-  margin: 0;
-}
+.tool-body { flex: 1; }
+.tool-card h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px; }
+.tool-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+.tool-link { font-size: 13px; color: var(--color-primary-600); font-weight: 500; margin-top: 14px; transition: color 0.2s; }
+.tool-card:hover .tool-link { color: var(--color-primary-500); }
 
 /* CTA */
 .cta {
-  text-align: center;
-  padding: 80px 20px;
-  background: linear-gradient(135deg, #1a1a2e, #0f3460);
-  color: #fff;
+  text-align: center; padding: 72px 20px;
+  background: linear-gradient(170deg, #eff6ff 0%, #dbeafe 100%);
 }
+.cta h2 { font-size: 26px; font-weight: 600; color: var(--text-primary); margin: 0 0 10px; }
+.cta p { color: var(--text-secondary); font-size: 15px; margin: 0 0 28px; }
 
-.cta h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 12px;
-}
-
-.cta p {
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 28px;
-  font-size: 15px;
-}
-
-.cta .el-button {
-  font-size: 16px;
-  padding: 12px 40px;
-  height: auto;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
-  .hero-title { font-size: 36px; }
-  .hero-subtitle { font-size: 18px; }
-  .feature-grid, .service-grid { grid-template-columns: 1fr; }
-  .stats { gap: 24px; }
-  .stat-value { font-size: 24px; }
+  .hero { padding: 72px 20px 56px; }
+  .hero-title { font-size: 32px; letter-spacing: 3px; }
+  .stats { gap: 24px; padding: 32px 16px; }
+  .stat-item:not(:last-child)::after { display: none; }
+  .stat-value { font-size: 28px; }
+  .tool-grid { grid-template-columns: 1fr; }
+  .tools, .cta { padding: 48px 16px; }
 }
+
+html.dark .hero { background: linear-gradient(170deg, rgba(37,99,235,0.06) 0%, var(--bg) 40%, var(--bg-card) 100%); }
+html.dark .hero-title { color: var(--text-primary); }
+html.dark .hero-subtitle { color: var(--text-secondary); }
+html.dark .hero-desc { color: var(--text-tertiary); }
+html.dark .stats { background: var(--bg-card); }
+html.dark .tool-tabs { border-bottom-color: var(--border); }
+html.dark .tool-card { background: var(--bg-card); border-color: var(--border); }
+html.dark .tool-icon { background: rgba(37,99,235,0.1); }
+html.dark .btn-outline { background: var(--bg-card) !important; }
+html.dark .cta { background: linear-gradient(170deg, rgba(37,99,235,0.06) 0%, rgba(37,99,235,0.10) 100%); }
 </style>
