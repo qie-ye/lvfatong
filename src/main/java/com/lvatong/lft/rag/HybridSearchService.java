@@ -6,6 +6,7 @@ import com.lvatong.lft.repository.KnowledgeChunkRepository;
 import io.milvus.v2.service.vector.response.SearchResp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,6 +25,9 @@ public class HybridSearchService {
     private final VectorStoreService vectorStoreService;
     private final KnowledgeChunkRepository knowledgeChunkRepository;
     private final EmbeddingService embeddingService;
+
+    @Autowired(required = false)
+    private RerankerService rerankerService;
 
     private volatile boolean milvusAvailable = true;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -164,6 +168,17 @@ public class HybridSearchService {
 
         log.debug("Hybrid search returned {} results for query: {}", results.size(),
                 query.length() > 50 ? query.substring(0, 50) + "..." : query);
+
+        // 应用 Reranker 重排序（如果可用）
+        if (rerankerService != null && results.size() > 1) {
+            try {
+                results = rerankerService.rerank(query, results, topK);
+                log.debug("Reranker applied, final {} results", results.size());
+            } catch (Exception e) {
+                log.warn("Reranker failed, using original results: {}", e.getMessage());
+            }
+        }
+
         return results;
     }
 

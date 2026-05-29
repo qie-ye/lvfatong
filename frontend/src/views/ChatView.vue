@@ -49,6 +49,16 @@
               </div>
               <h2 class="welcome-title">法律咨询</h2>
               <p class="welcome-subtitle">输入您的法律问题，获取专业解答</p>
+              
+              <!-- 热门推荐 -->
+              <RecommendationPanel
+                :visible="popularRecommendations.length > 0"
+                title="热门问题"
+                :recommendations="popularRecommendations"
+                @select="handleRecommendationSelect"
+                @refresh="fetchPopular"
+              />
+              
               <div class="quick-chips">
                 <span v-for="q in quickQuestions" :key="q" class="quick-chip" @click="handleQuickQuestion(q)">{{ q }}</span>
               </div>
@@ -84,6 +94,23 @@
             </div>
           </div>
           <div class="input-area">
+            <!-- 智能提示 -->
+            <SmartSuggestion
+              :visible="showSuggestions"
+              :suggestions="suggestions"
+              @select="handleSuggestionSelect"
+              @close="showSuggestions = false"
+            />
+            
+            <!-- 查询相关推荐 -->
+            <RecommendationPanel
+              :visible="queryRecommendations.length > 0 && !chatStore.isStreaming"
+              title="相关推荐"
+              :recommendations="queryRecommendations"
+              @select="handleRecommendationSelect"
+              @refresh="fetchQueryRecommendations"
+            />
+            
             <div class="input-wrapper">
               <el-input
                 v-model="inputText"
@@ -93,6 +120,7 @@
                 :disabled="chatStore.isStreaming"
                 resize="none"
                 @keydown="handleInputKeydown"
+                @input="handleInputChange"
               />
               <div class="input-footer">
                 <div v-if="chatStore.contextUsage" class="context-indicator" @click="handleCompressContext">
@@ -123,14 +151,23 @@ import type { ChatSession } from '@/stores/chat'
 import { renderMarkdown } from '@/utils/renderMarkdown'
 import { useFeedbackStore } from '@/stores/feedback'
 import type { FeedbackRating } from '@/stores/feedback'
+import { useRecommendationStore } from '@/stores/recommendation'
+import type { RecommendationItem } from '@/stores/recommendation'
 import DisclaimerBanner from '@/components/DisclaimerBanner.vue'
 import SpeechButton from '@/components/SpeechButton.vue'
+import SmartSuggestion from '@/components/SmartSuggestion.vue'
+import RecommendationPanel from '@/components/RecommendationPanel.vue'
 import { Plus, ChatDotRound } from '@element-plus/icons-vue'
 
 const chatStore = useChatStore()
 const feedbackStore = useFeedbackStore()
+const recommendationStore = useRecommendationStore()
 const inputText = ref('')
 const messagesRef = ref<HTMLElement>()
+const showSuggestions = ref(false)
+const suggestions = ref<any[]>([])
+const queryRecommendations = ref<RecommendationItem[]>([])
+const popularRecommendations = ref<RecommendationItem[]>([])
 
 const quickQuestions = [
   '劳动合同纠纷怎么处理？',
@@ -185,8 +222,17 @@ async function handleCompressContext() {
   }
 }
 
-onMounted(() => { chatStore.loadSessions() })
-watch(() => chatStore.messages.length, () => { nextTick(scrollToBottom) })
+onMounted(() => { 
+  chatStore.loadSessions()
+  fetchPopular()
+})
+watch(() => chatStore.messages.length, () => { 
+  nextTick(scrollToBottom)
+  // 当有新消息时，获取相关推荐
+  if (chatStore.messages.length > 0) {
+    fetchQueryRecommendations()
+  }
+})
 watch(() => chatStore.streamingContent, () => { nextTick(scrollToBottom) })
 
 async function handleNewSession() { await chatStore.createSession() }
@@ -221,6 +267,11 @@ async function handleSend() {
   const question = inputText.value.trim()
   if (!question || chatStore.isStreaming) return
   inputText.value = ''
+  showSuggestions.value = false
+  
+  // 记录搜索行为
+  recordUserBehavior('SEARCH', 'CHAT', undefined)
+  
   if (!chatStore.currentSessionId) {
     await chatStore.createSession(question.length > 20 ? question.substring(0, 20) + '...' : question)
   }
@@ -258,6 +309,107 @@ async function handleFeedback(sessionId: number, messageIndex: number, rating: F
     await feedbackStore.submitFeedback(sessionId, messageIndex, rating)
     ElMessage.success(rating === 'GOOD' ? '感谢好评' : '感谢反馈')
   } catch { ElMessage.error('提交失败') }
+}
+
+// 智能提示相关
+let inputDebounceTimer: number | null = null
+
+function handleInputChange(value: string) {
+  if (inputDebounceTimer) {
+    clearTimeout(inputDebounceTimer)
+  }
+  
+  if (!value.trim()) {
+    showSuggestions.value = false
+    return
+  }
+  
+  inputDebounceTimer = window.setTimeout(() => {
+    generateSuggestions(value)
+  }, 300)
+}
+
+function generateSuggestions(query: string) {
+  // 基于输入生成智能提示
+  const suggestionList = []
+  
+  if (query.includes('劳动') || query.includes('工资') || query.includes('辞退')) {
+    suggestionList.push({
+      type: 'law',
+      title: '劳动合同法相关条款',
+      description: '查看劳动法相关规定',
+      query: '劳动合同法 经济补偿'
+    })
+    suggestionList.push({
+      type: 'faq',
+      title: '劳动纠纷常见问题',
+      description: 'FAQ快速解答',
+      query: '劳动纠纷 FAQ'
+    })
+  }
+  
+  if (query.includes('合同') || query.includes('违约') || query.includes('赔偿')) {
+    suggestionList.push({
+      type: 'case',
+      title: '相似合同纠纷案例',
+      description: '参考类似案例判决',
+      query: query + ' 案例'
+    })
+  }
+  
+  if (query.includes('离婚') || query.includes('财产') || query.includes('抚养')) {
+    suggestionList.push({
+      type: 'lawyer',
+      title: '婚姻家庭专业律师',
+      description: '推荐专业律师咨询',
+      query: '婚姻家庭律师'
+    })
+  }
+  
+  suggestions.value = suggestionList
+  showSuggestions.value = suggestionList.length > 0
+}
+
+function handleSuggestionSelect(item: any) {
+  showSuggestions.value = false
+  if (item.query) {
+    inputText.value = item.query
+    nextTick(() => handleSend())
+  }
+}
+
+// 推荐相关
+async function fetchPopular() {
+  try {
+    await recommendationStore.fetchPopular(5)
+    popularRecommendations.value = recommendationStore.popularRecommendations
+  } catch (error) {
+    console.error('Failed to fetch popular:', error)
+  }
+}
+
+async function fetchQueryRecommendations() {
+  const lastMessage = chatStore.messages[chatStore.messages.length - 1]
+  if (lastMessage?.role === 'USER') {
+    await recommendationStore.fetchQueryBased(lastMessage.content, undefined, 5)
+    queryRecommendations.value = recommendationStore.queryBasedRecommendations
+  }
+}
+
+function handleRecommendationSelect(item: RecommendationItem) {
+  if (item.title) {
+    inputText.value = item.title
+    nextTick(() => handleSend())
+  }
+}
+
+// 记录用户行为
+async function recordUserBehavior(action: string, targetType: string, targetId?: number) {
+  try {
+    await recommendationStore.recordBehavior(action, targetType, targetId)
+  } catch (error) {
+    console.error('Failed to record behavior:', error)
+  }
 }
 </script>
 

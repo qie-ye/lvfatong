@@ -33,6 +33,7 @@
 - 🔧 **Function Calling**：复杂问题自动调用法条/案例/FAQ/律师/合同工具链
 - 🧠 **长期记忆**：Redis(上下文) + MySQL(摘要) + MySQL(画像) 三层记忆
 - 🏢 **企业级能力**：JWT+RBAC、审计日志、全局异常处理、Prometheus/Grafana/Zipkin 可观测
+- 👥 **团队协作**：团队管理、任务看板、消息通知、文件共享（V3.6）
 
 ---
 
@@ -184,6 +185,13 @@
 - 分批次训练调度器，支持断点续训与自动重试
 - 训练 Loss 曲线可视化，见 [finetune/](finetune/) 目录
 
+### 9) 团队协作（V3.6）
+
+- **团队管理**：创建团队、邀请成员、角色权限（所有者/管理员/成员）
+- **任务看板**：任务创建、分配、状态流转（待办→进行中→审核→完成）、Kanban视图
+- **消息通知**：团队消息、私信、系统通知、@提醒
+- **协作工具**：案件评论（支持回复）、团队文件共享
+
 ---
 
 ## 技术栈如何支撑功能落地
@@ -198,6 +206,7 @@
 | 会话记忆 | `Redis` + MySQL + 定时任务 | 构建短期上下文与长期偏好记忆 |
 | 观测能力 | `Actuator` + Prometheus + Grafana + Zipkin | 具备指标、日志、链路追踪三位一体观测 |
 | 部署交付 | Docker + Compose + Nginx + GitHub Actions | 支持本地/生产一致化部署与自动化构建 |
+| 团队协作 | `Spring Data JPA` + `WebSocket` + `Pinia` | 团队、任务、消息、评论、文件管理 |
 
 ---
 
@@ -280,6 +289,9 @@ lvatong/
 │  ├─ repository/         # 19个JPA Repository
 │  ├─ model/              # Entity + DTO（48个类）
 │  ├─ contract/           # 文档解析(PDF/Word)、条款提取、风险评估
+│  ├─ team/               # 团队管理服务（V3.6）
+│  ├─ collaboration/      # 协作服务：任务、评论、文件（V3.6）
+│  ├─ messaging/          # 消息通知服务（V3.6）
 │  ├─ config/             # SecurityConfig、CORS、WebSocket、Resilience4j等
 │  ├─ knowledge/          # 知识库导入、数据清洗
 │  ├─ websocket/          # STOMP WebSocket配置
@@ -439,6 +451,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 - `src/main/resources/db/migration/V4__seed_legal_cases.sql`
 - `src/main/resources/db/migration/V6__seed_faq_and_templates.sql`
 - `src/main/resources/db/migration/V7__extend_feedback_table.sql`
+- `src/main/resources/db/migration/V8__add_recommendation_tables.sql`
+- `src/main/resources/db/migration/V9__add_performance_indexes.sql`
+- `src/main/resources/db/migration/V10__add_dashboard_stats.sql`
+- `src/main/resources/db/migration/V11__add_team_tables.sql`
+- `src/main/resources/db/migration/V12__add_collaboration_tables.sql`
+- `src/main/resources/db/migration/V13__add_messaging_tables.sql`
+- `src/main/resources/db/migration/V14__add_comment_file_tables.sql`
 
 应用启动时会按版本顺序自动执行。
 
@@ -456,6 +475,11 @@ docker compose -f docker-compose.prod.yml up -d --build
 - `/cases` 案例检索
 - `/profile` 个人中心（需登录）
 - `/admin` 管理台（需管理员）
+- `/teams` 团队列表（需登录，V3.6）
+- `/teams/:id` 团队详情（需登录，V3.6）
+- `/tasks/board` 任务看板（需登录，V3.6）
+- `/messages` 消息中心（需登录，V3.6）
+- `/knowledge-graph` 知识图谱（需登录，V3.5）
 
 ---
 

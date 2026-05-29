@@ -1,0 +1,73 @@
+简版方案：法律大模型微调接入现有项目
+核心工具链：Qwen2.5-7B-Instruct + LLaMA-Factory + Ollama
+
+1. 环境准备（一次性）
+安装 Anaconda，创建环境：
+
+bash
+conda create -n llmfactory python=3.10 -y
+conda activate llmfactory
+安装 LLaMA-Factory：
+
+bash
+git clone https://github.com/hiyouga/LLaMA-Factory.git
+cd LLaMA-Factory
+pip install -e ".[torch,metrics]"
+安装 Ollama for Windows（官网下载安装包直接安装）。
+
+从魔搭社区下载模型 Qwen2.5-7B-Instruct（不要用 Ollama 下载的）。
+
+2. 构造法律微调数据
+在 LLaMA-Factory/data 里新建 legal_data.json，用 Alpaca 格式构造 200-500 条：
+
+json
+[{
+  "instruction": "……",
+  "input": "",
+  "output": "……【免责声明】……"
+}]
+在 dataset_info.json 中注册该数据集。
+
+3. 启动微调（在你的项目中调用或手动启动）
+启动 Web UI：python src/webui.py
+
+配置：
+
+模型路径 → 你的 Qwen2.5-7B 文件夹
+
+微调方法 → LoRA + QLoRA (4bit)
+
+数据集 → legal_data
+
+关键参数：batch_size=1, gradient_accumulation_steps=8, lr=2e-4, epochs=3
+
+点击训练，关注 loss 下降即可。
+
+4. 导出为 Ollama 可用格式
+在 Web UI 的 Export 页，选择训练好的 LoRA 路径，勾选 “导出为 Ollama 格式”。
+
+自动生成 Modelfile。
+
+5. 把模型接入你的项目
+打开命令行，进入导出目录，执行：
+
+bash
+ollama create law-assistant -f Modelfile
+在你的项目后端代码中，通过 Ollama 的 API 或直接命令行调用：
+
+python
+# 示例：Python 调用
+import ollama
+response = ollama.chat(model='law-assistant', messages=[{'role': 'user', 'content': '咨询问题'}])
+print(response['message']['content'])
+或者用 ollama run law-assistant 直接在终端交互。
+
+要点提醒：
+
+基座模型必须用 HuggingFace 格式下载，Ollama 下载的 GGUF 格式 LLaMA-Factory 不认。
+
+微调前用基座模型跑几条法律问题，微调后做对比，证明提升。
+
+数据里每条回答务必包含法条引用和免责声明。
+
+这就是全部。直接在你的项目里按这个顺序走，即可拥有一个经过法律领域调优的专属助手。

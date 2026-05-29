@@ -2,6 +2,8 @@ package com.lvatong.lft.ai;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.lvatong.lft.ai.tools.CompensationCalculator;
+import com.lvatong.lft.ai.tools.StatuteChecker;
 import com.lvatong.lft.knowledge.FaqService;
 import com.lvatong.lft.model.entity.FaqEntry;
 import com.lvatong.lft.rag.HybridSearchService;
@@ -31,6 +33,8 @@ public class ToolExecutor {
     private final LawyerService lawyerService;
     @Lazy
     private final ContractDocumentRepository contractDocumentRepository;
+    private final CompensationCalculator compensationCalculator;
+    private final StatuteChecker statuteChecker;
 
     /**
      * 执行工具调用，返回格式化的文本结果
@@ -49,6 +53,8 @@ public class ToolExecutor {
                 case "faq_lookup"       -> faqLookup(args);
                 case "search_lawyer"    -> searchLawyer(args);
                 case "analyze_contract" -> analyzeContract(args);
+                case "calculate_compensation" -> calculateCompensation(args);
+                case "check_statute_of_limitations" -> checkStatute(args);
                 default -> "【工具 " + toolName + " 未实现】";
             };
         } catch (Exception e) {
@@ -156,6 +162,24 @@ public class ToolExecutor {
         } catch (Exception e) {
             log.warn("analyze_contract failed: {}", e.getMessage());
             return "合同分析查询失败：" + e.getMessage();
+        }
+    }
+
+    private String calculateCompensation(JSONObject args) {
+        try {
+            return compensationCalculator.calculate(args.toJSONString());
+        } catch (Exception e) {
+            log.warn("calculate_compensation failed: {}", e.getMessage());
+            return "赔偿计算失败：" + e.getMessage();
+        }
+    }
+
+    private String checkStatute(JSONObject args) {
+        try {
+            return statuteChecker.check(args.toJSONString());
+        } catch (Exception e) {
+            log.warn("check_statute_of_limitations failed: {}", e.getMessage());
+            return "时效检查失败：" + e.getMessage();
         }
     }
 }

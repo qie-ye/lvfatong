@@ -2,7 +2,7 @@ package com.lvatong.lft.service;
 
 import com.lvatong.lft.common.audit.Auditable;
 import com.lvatong.lft.common.exception.BusinessException;
-import com.lvatong.lft.service.NotificationService;
+import com.lvatong.lft.messaging.NotificationService;
 import com.lvatong.lft.model.dto.*;
 import com.lvatong.lft.model.entity.Appointment;
 import com.lvatong.lft.model.entity.LawyerProfile;

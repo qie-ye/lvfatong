@@ -76,8 +76,44 @@ const router = createRouter({
     {
       path: '/admin',
       name: 'admin',
+      component: () => import('@/views/admin/DashboardView.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/legacy',
+      name: 'adminLegacy',
       component: () => import('@/views/AdminDashboardView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/knowledge-graph',
+      name: 'knowledgeGraph',
+      component: () => import('@/views/KnowledgeGraphView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/teams',
+      name: 'teams',
+      component: () => import('@/views/team/TeamListView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/teams/:id',
+      name: 'teamDetail',
+      component: () => import('@/views/team/TeamDetailView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tasks/board',
+      name: 'taskBoard',
+      component: () => import('@/views/collaboration/TaskBoardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/messages',
+      name: 'messages',
+      component: () => import('@/views/MessageCenterView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

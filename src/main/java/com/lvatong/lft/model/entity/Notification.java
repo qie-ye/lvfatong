@@ -7,7 +7,10 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications", indexes = {
+        @Index(name = "idx_notifications_user_id", columnList = "userId"),
+        @Index(name = "idx_notifications_created_at", columnList = "createdAt")
+})
 public class Notification extends BaseEntity {
 
     @Column(name = "user_id", nullable = false)
@@ -22,6 +25,12 @@ public class Notification extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "`read`", nullable = false)
-    private boolean read = false;
+    @Column(name = "related_type", length = 50)
+    private String relatedType;
+
+    @Column(name = "related_id")
+    private Long relatedId;
+
+    @Column(name = "read")
+    private Boolean isRead = false;
 }

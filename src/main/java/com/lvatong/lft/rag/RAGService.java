@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class RAGService {
 
     private final DocumentChunker documentChunker;
+    private final SemanticChunker semanticChunker;
     private final EmbeddingService embeddingService;
     private final VectorStoreService vectorStoreService;
     private final HybridSearchService hybridSearchService;
@@ -45,10 +46,28 @@ public class RAGService {
      */
     @Transactional
     public void ingestDocument(Long documentId) {
+        ingestDocument(documentId, false);
+    }
+
+    /**
+     * 文档入库：分块→Embedding→Milvus存储
+     *
+     * @param documentId     文档ID
+     * @param useSemantic    是否使用语义分块
+     */
+    @Transactional
+    public void ingestDocument(Long documentId, boolean useSemantic) {
         KnowledgeDocument doc = knowledgeDocumentRepository.findById(documentId)
                 .orElseThrow(() -> new IllegalArgumentException("Document not found: " + documentId));
 
-        List<String> chunks = documentChunker.chunk(doc.getContent());
+        // 根据文档类型选择分块策略
+        List<String> chunks;
+        if (useSemantic || semanticChunker.hasLegalStructure(doc.getContent())) {
+            log.info("Using semantic chunking for document {}", documentId);
+            chunks = semanticChunker.chunkByLegalClauses(doc.getContent());
+        } else {
+            chunks = documentChunker.chunk(doc.getContent());
+        }
         log.info("Document {} chunked into {} pieces", documentId, chunks.size());
 
         List<JSONObject> milvusRows = new ArrayList<>();

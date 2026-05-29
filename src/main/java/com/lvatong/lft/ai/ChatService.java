@@ -1,7 +1,11 @@
 package com.lvatong.lft.ai;
 
+import com.lvatong.lft.agent.ReActAgent;
+import com.lvatong.lft.agent.PlanAndExecuteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +23,22 @@ public class ChatService {
     private final VerificationService verificationService;
     private final ToolRegistry toolRegistry;
     private final ToolExecutor toolExecutor;
+
+    private PlanAndExecuteService planAndExecuteService;
+
+    private ReActAgent reActAgent;
+
+    @Autowired
+    @Lazy
+    public void setPlanAndExecuteService(PlanAndExecuteService planAndExecuteService) {
+        this.planAndExecuteService = planAndExecuteService;
+    }
+
+    @Autowired
+    @Lazy
+    public void setReActAgent(ReActAgent reActAgent) {
+        this.reActAgent = reActAgent;
+    }
 
     /**
      * 非流式法律问答
@@ -392,6 +412,97 @@ public class ChatService {
             String fallback = modelRouterService.getFallbackModel(model);
             String answer = zhipuApiClient.chat(fallback, messages, params.temperature(), params.maxTokens());
             return promptTemplateService.appendDisclaimer(answer + "\n\n[注：当前使用降级模型，长文本分析能力受限]");
+        }
+    }
+
+    /**
+     * ReAct Agent 法律问答（显式推理链）
+     * 适用于需要多步推理和工具调用的复杂问题
+     */
+    public String legalQaWithReAct(String question, String context, List<Map<String, String>> history) {
+        return legalQaWithReAct(question, context, history, null);
+    }
+
+    public String legalQaWithReAct(String question, String context,
+                                    List<Map<String, String>> history, String memoryContext) {
+        try {
+            String fullContext = context;
+            if (memoryContext != null && !memoryContext.isBlank()) {
+                fullContext = (context != null ? context + "\n\n" : "") + "【用户记忆】\n" + memoryContext;
+            }
+
+            ReActAgent.ReActResult result = reActAgent.execute(question, fullContext, history);
+
+            log.info("ReAct Agent completed: {} iterations", result.getIterations());
+            return promptTemplateService.appendDisclaimer(result.getFinalAnswer());
+
+        } catch (Exception e) {
+            log.warn("ReAct Agent failed, falling back to legalQaWithTools: {}", e.getMessage());
+            return legalQaWithTools(question, context, history);
+        }
+    }
+
+    /**
+     * Plan-and-Execute 法律问答（复杂问题分解）
+     * 适用于涉及多个法律领域、需要综合分析的复杂问题
+     */
+    public String legalQaWithPlanExecute(String question, String context) {
+        return legalQaWithPlanExecute(question, context, null);
+    }
+
+    public String legalQaWithPlanExecute(String question, String context, String memoryContext) {
+        try {
+            String fullContext = context;
+            if (memoryContext != null && !memoryContext.isBlank()) {
+                fullContext = (context != null ? context + "\n\n" : "") + "【用户记忆】\n" + memoryContext;
+            }
+
+            PlanAndExecuteService.PlanExecuteResult result = planAndExecuteService.execute(question, fullContext);
+
+            log.info("Plan-and-Execute completed: {} subtasks", result.getPlan().size());
+            return promptTemplateService.appendDisclaimer(result.getFinalAnswer());
+
+        } catch (Exception e) {
+            log.warn("Plan-and-Execute failed, falling back to complexLegalQa: {}", e.getMessage());
+            return complexLegalQa(question, context, List.of());
+        }
+    }
+
+    /**
+     * 智能路由：根据问题复杂度选择最优推理模式
+     *
+     * - 简单问题：直接问答
+     * - 中等复杂：Function Calling
+     * - 高复杂度：ReAct Agent
+     * - 超复杂：Plan-and-Execute
+     */
+    public String smartLegalQa(String question, String context,
+                                List<Map<String, String>> history, String memoryContext) {
+        // 意图识别
+        IntentClassifier.IntentResult intentResult = intentClassifier.classifyWithConfidence(question);
+        PromptTemplateService.IntentType intent = intentResult.type();
+        double confidence = intentResult.confidence();
+
+        log.info("Smart QA - intent: {}, confidence: {}", intent, String.format("%.2f", confidence));
+
+        // 根据意图和复杂度选择推理模式
+        if (intent == PromptTemplateService.IntentType.COMPLEX_LEGAL) {
+            // 复杂问题：使用 Plan-and-Execute
+            log.info("Using Plan-and-Execute for complex legal question");
+            return legalQaWithPlanExecute(question, context, memoryContext);
+        } else if (intent == PromptTemplateService.IntentType.LEGAL_QA && confidence < 0.7) {
+            // 不确定的法律问题：使用 ReAct Agent
+            log.info("Using ReAct Agent for uncertain legal question");
+            return legalQaWithReAct(question, context, history, memoryContext);
+        } else if (intent == PromptTemplateService.IntentType.CASE_QUERY
+                || intent == PromptTemplateService.IntentType.LAW_QUERY) {
+            // 案例/法条查询：使用 Function Calling
+            log.info("Using Function Calling for query");
+            return legalQaWithTools(question, context, history, memoryContext);
+        } else {
+            // 普通问答：直接回答
+            log.info("Using direct QA");
+            return legalQa(question, context, history, intent, memoryContext);
         }
     }
 }

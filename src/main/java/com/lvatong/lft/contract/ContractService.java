@@ -7,7 +7,7 @@ import com.lvatong.lft.ai.VerificationService;
 import com.lvatong.lft.async.AsyncTaskMessage;
 import com.lvatong.lft.async.AsyncTaskProducer;
 import com.lvatong.lft.common.exception.BusinessException;
-import com.lvatong.lft.service.NotificationService;
+import com.lvatong.lft.messaging.NotificationService;
 import com.lvatong.lft.model.dto.ContractAnalysisResult;
 import com.lvatong.lft.model.dto.ContractModificationSuggestion;
 import com.lvatong.lft.model.dto.ContractUploadResponse;
@@ -413,6 +413,56 @@ public class ContractService {
         } catch (Exception e) {
             throw new BusinessException("合同对比分析失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 异步合同分析（由 RabbitMQ Consumer 调用）
+     */
+    public String analyzeContractAsync(Long contractId) {
+        ContractDocument doc = contractDocumentRepository.findById(contractId)
+                .orElseThrow(() -> new BusinessException("合同文档不存在"));
+
+        try {
+            List<ClauseExtractor.Clause> clauses = clauseExtractor.extract(doc.getParsedText());
+            List<ContractAnalysisResult.ClauseAnalysis> ruleResults = riskAssessor.assess(clauses);
+            ContractAnalysisResult result = enhanceWithAI(doc.getParsedText(), ruleResults);
+
+            String jsonResult = objectMapper.writeValueAsString(result);
+            doc.setAnalysisResult(jsonResult);
+            doc.setStatus(ContractDocument.AnalysisStatus.COMPLETED);
+            contractDocumentRepository.save(doc);
+
+            notificationService.send(doc.getUserId(), "CONTRACT_ANALYSIS",
+                    "合同分析完成",
+                    "您的合同《" + doc.getFilename() + "》已分析完成，请查看分析报告。");
+
+            return jsonResult;
+        } catch (Exception e) {
+            log.error("Async contract analysis failed for {}: {}", contractId, e.getMessage());
+            doc.setStatus(ContractDocument.AnalysisStatus.FAILED);
+            contractDocumentRepository.save(doc);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 文档解析（由 RabbitMQ Consumer 调用）
+     */
+    public void parseDocument(Long contractId) {
+        ContractDocument doc = contractDocumentRepository.findById(contractId)
+                .orElseThrow(() -> new BusinessException("合同文档不存在"));
+        // Document parsing logic already handled in upload method
+        log.info("Document parsing triggered for contractId={}", contractId);
+    }
+
+    /**
+     * 风险评估（由 RabbitMQ Consumer 调用）
+     */
+    public void assessRisk(Long contractId) {
+        ContractDocument doc = contractDocumentRepository.findById(contractId)
+                .orElseThrow(() -> new BusinessException("合同文档不存在"));
+        // Risk assessment logic already handled in analysis
+        log.info("Risk assessment triggered for contractId={}", contractId);
     }
 
     /**

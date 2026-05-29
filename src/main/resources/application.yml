@@ -39,6 +39,21 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 5000
+  neo4j:
+    uri: ${NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:password}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 1
+        max-concurrency: 5
 
 springdoc:
   swagger-ui:
@@ -121,9 +136,60 @@ xfyun:
   iat-url: wss://iat-api.xfyun.cn/v2/iat
   auth-ttl: 300
 
+lvatong:
+  mq:
+    type: ${MQ_TYPE:redis}  # redis 或 rabbitmq
+  gpu:
+    enabled: ${GPU_ENABLED:true}
+    base-url: ${GPU_SERVICE_URL:http://localhost:8081}
+    timeout: ${GPU_TIMEOUT:5000}
+    retry:
+      max-attempts: 3
+      backoff: 1000
+  cache:
+    spec: maximumSize=1000,expireAfterWrite=10m
+    rag-results:
+      ttl-minutes: 5
+      max-size: 500
+    intent-results:
+      ttl-minutes: 10
+      max-size: 1000
+    embedding-results:
+      ttl-minutes: 30
+      max-size: 2000
+  security:
+    encryption:
+      enabled: true
+      algorithm: AES-256-GCM
+      key: ${ENCRYPTION_KEY:}
+    audit:
+      enabled: true
+      retention-days: 365
+    privacy:
+      export-enabled: true
+      deletion-grace-days: 30
+    rate-limit:
+      enabled: true
+      default-limit: 100
+      default-window: 60
+  multimodal:
+    ocr:
+      enabled: true
+      provider: baidu
+      api-key: ${OCR_API_KEY:}
+    tts:
+      enabled: true
+      provider: xfyun
+      voice: xiaoyan
+    asr:
+      provider: xfyun
+
 logging:
   level:
     com.lvatong.lft.ai: INFO
     com.lvatong.lft.rag: INFO
     com.lvatong.lft.service: INFO
+    com.lvatong.lft.mq: INFO
+    com.lvatong.lft.gpu: INFO
+    com.lvatong.lft.cache: INFO
     root: WARN

@@ -2,6 +2,7 @@ package com.lvatong.lft.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -79,6 +80,17 @@ public class JwtTokenProvider {
 
     public long getAccessTokenExpiration() {
         return accessTokenExpiration;
+    }
+
+    /**
+     * 从请求中解析 JWT Token
+     */
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     private Claims parseToken(String token) {

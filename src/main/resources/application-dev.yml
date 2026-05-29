@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-circular-references: true
   datasource:
     url: jdbc:mysql://localhost:3306/lvatong_dev?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:root}
@@ -16,6 +18,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+  # 禁用Neo4j自动配置
+  neo4j:
+    uri: bolt://localhost:7687
+    autoconfigure:
+      exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
 
 logging:
   level:

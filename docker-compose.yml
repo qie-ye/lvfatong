@@ -47,6 +47,27 @@ services:
       - "9411:9411"
     restart: unless-stopped
 
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: lvatong-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lvatong-net
+
   # ---- Milvus Standalone 向量数据库 ----
   etcd:
     image: quay.io/coreos/etcd:v3.5.16
@@ -112,12 +133,60 @@ services:
     networks:
       - lvatong-net
 
+  # Neo4j 图数据库
+  neo4j:
+    image: neo4j:5-community
+    container_name: lvatong-neo4j
+    ports:
+      - "7474:7474"  # Web UI
+      - "7687:7687"  # Bolt 协议
+    environment:
+      NEO4J_AUTH: ${NEO4J_USERNAME:neo4j}/${NEO4J_PASSWORD:password}
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lvatong-net
+
+  # GPU 推理服务（Reranker + Embedding）
+  gpu-inference:
+    build: ./docker/gpu-inference
+    container_name: lvatong-gpu-inference
+    ports:
+      - "8081:8081"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - ./models:/models
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - lvatong-net
+
 volumes:
   mysql_data:
   redis_data:
   etcd_data:
   minio_data:
   milvus_data:
+  rabbitmq_data:
+  neo4j_data:
 
 networks:
   lvatong-net:
